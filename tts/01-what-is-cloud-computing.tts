@@ -1,0 +1,49 @@
+Cloud computing is the on-demand delivery of IT resources over the internet, with pay-as-you-go pricing. Instead of owning and maintaining physical data centers and servers, you can access compute, storage, databases, and dozens of other services from a cloud provider like AWS — and pay only for what you use.
+
+Let's start by looking at how things used to work, and why cloud computing changed everything.
+
+In the traditional IT world, if your company needed servers, you had to buy them. That meant large upfront costs, weeks of procurement, and your team managing all the hardware — racks, cooling, power, and security. And here's the painful part: you had to guess your capacity. Too little, and your systems go down during peak traffic. Too much, and you're paying for servers sitting idle at ten percent utilization. It was expensive, slow, and inflexible.
+
+Cloud computing flips this entirely. You rent resources on demand, scale up or down in minutes, and pay only for what you use. Need to deploy globally? Done in minutes, not months.
+
+Now let's talk about the different ways you can deploy cloud infrastructure.
+
+The most common is the Public Cloud — where resources are owned and operated by a provider like AWS, Azure, or GCP, and shared across customers. You never see or touch the hardware.
+
+Then there's the Private Cloud — infrastructure dedicated to a single organization. You get more control and isolation, but also more responsibility and cost.
+
+A Hybrid Cloud combines both — public and private, connected together. This is common when organizations have legacy systems on-premises but want to move new workloads to the cloud.
+
+And finally, Multi-Cloud means using more than one public cloud provider — for example, both AWS and GCP. It avoids vendor lock-in, but does add operational complexity.
+
+Next, let's look at the three cloud service models — and how much of the stack you're responsible for in each.
+
+With Infrastructure as a Service, or IaaS, the provider gives you the raw building blocks: compute, storage, and networking. You manage the operating system, runtime, and everything above it. AWS examples include EC2, VPC, and EBS.
+
+With Platform as a Service, or PaaS, the provider takes over the OS and runtime as well. You just focus on your application and data. Think Elastic Beanstalk or RDS.
+
+And with Software as a Service, or SaaS, the provider manages everything. You simply use the software. Amazon WorkMail and Chime are examples of this.
+
+Now, AWS identifies six key advantages of cloud computing — and these come up in the exam, so pay attention.
+
+One: Trade capital expense for variable expense. Stop buying hardware upfront. Pay only for what you consume.
+
+Two: Benefit from massive economies of scale. AWS serves hundreds of thousands of customers, which drives costs down — and those savings are passed on to you.
+
+Three: Stop guessing capacity. Scale up or down in minutes. No more over-provisioning or running out of resources unexpectedly.
+
+Four: Increase speed and agility. New resources are available in seconds. Developers can experiment faster and ship quicker.
+
+Five: Stop spending money on running and maintaining data centers. Let AWS handle the undifferentiated heavy lifting, so you can focus on your customers.
+
+Six: Go global in minutes. Deploy your application across multiple AWS regions around the world with just a few clicks.
+
+Finally, a quick introduction to AWS itself.
+
+Amazon Web Services launched in 2006 and is today the world's most comprehensive and broadly adopted cloud platform. It offers over two hundred fully featured services — spanning compute, storage, databases, machine learning, networking, security, and more — all available from data centers around the globe.
+
+AWS is available in over thirty geographic regions, each made up of multiple Availability Zones for high availability and fault tolerance. It's used by startups, enterprises, and governments worldwide, and holds the largest market share in the cloud industry.
+
+You interact with AWS in three main ways: through the AWS Management Console, which is the web-based interface; through the AWS CLI, which is the command-line tool; or through the SDKs, which let you access AWS programmatically using languages like Python, JavaScript, or Java.
+
+That wraps up what cloud computing is. In the next topic, we'll explore the AWS Global Infrastructure — regions, availability zones, and edge locations.
