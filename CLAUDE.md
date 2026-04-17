@@ -1,7 +1,7 @@
 # AWS Learning Content Repo
 
 ## Role
-You are an AWS expert and content creator. This repo contains educational content covering AWS concepts, primarily targeting the AWS Cloud Practitioner exam and general AWS knowledge.
+You are an AWS expert and content creator. This repo contains educational content covering AWS concepts, targeting the AWS Solutions Architect Associate (SAA-C03) exam and general AWS architecture knowledge.
 
 See `../CLAUDE.md` for shared notebook conventions, repo structure, audio generation, TTS guidelines, and content guidelines.
 
@@ -9,30 +9,43 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 
 - Use real-world analogies to explain AWS concepts
 - Prefer `boto3` (Python) for code examples unless the AWS CLI is more illustrative
+- Emphasise architectural decision-making: when to use which service and why
 
 ## Topics Covered
 
-| Topic | Notebook | Audio |
-|---|---|---|
-| What is Cloud Computing | `01-what-is-cloud-computing.ipynb` | `what-is-cloud-computing.wav` |
-| AWS Global Infrastructure | _(planned)_ | `aws-global-infrastructure.wav` |
-| AWS Account & Billing Basics | _(planned)_ | `aws-account--billing-basics.wav` |
-| AWS Well-Known Services Overview | _(planned)_ | `aws-well-known-services-overview.wav` |
-| Compute: EC2 | _(planned)_ | `compute--ec2.wav` |
-| Compute: Serverless & Containers | _(planned)_ | `compute--serverless--containers.wav` |
-| Storage: S3 | _(planned)_ | `storage--s3.wav` |
-| Storage: EBS, EFS & FSx | _(planned)_ | `storage--ebs-efs--fsx.wav` |
-| Networking & VPC | _(planned)_ | `networking--vpc.wav` |
-| Route 53 & CloudFront | _(planned)_ | `route-53--cloudfront.wav` |
-| IAM & Organizations | _(planned)_ | `iam--organizations.wav` |
-| Databases | _(planned)_ | `databases.wav` |
-| High Availability & DR | _(planned)_ | `high-availability--dr.wav` |
-| Load Balancing & Auto Scaling | _(planned)_ | `load-balancing--auto-scaling.wav` |
-| Security & Encryption | _(planned)_ | `security--encryption.wav` |
-| Shared Responsibility Model | _(planned)_ | `shared-responsibility-model.wav` |
-| Monitoring & Governance | _(planned)_ | `monitoring--governance.wav` |
-| Application Integration | _(planned)_ | `application-integration.wav` |
-| Cost Optimization | _(planned)_ | `cost-optimization.wav` |
-| Migration & Transfer | _(planned)_ | `migration--transfer.wav` |
-| Well-Architected Framework | _(planned)_ | `well-architected-framework.wav` |
-| Exam Tips | _(planned)_ | `exam-tips.wav` |
+| # | Topic | Notebook | Audio |
+|---|---|---|---|
+| 01 | What is Cloud Computing | `01-what-is-cloud-computing.ipynb` | `01-what-is-cloud-computing.wav` |
+| 02 | AWS Global Infrastructure | _(planned)_ | `02-aws-global-infrastructure.wav` |
+| 03 | IAM Fundamentals | _(planned)_ | `03-iam-fundamentals.wav` |
+| 04 | IAM Advanced & Organizations | _(planned)_ | `04-iam-advanced-and-organizations.wav` |
+| 05 | EC2 Fundamentals | _(planned)_ | `05-ec2-fundamentals.wav` |
+| 06 | EC2 Advanced — AMIs & Placement Groups | _(planned)_ | `06-ec2-advanced-amis-placement-groups.wav` |
+| 07 | ELB & Auto Scaling | _(planned)_ | `07-elb-and-auto-scaling.wav` |
+| 08 | Lambda & Serverless | _(planned)_ | `08-lambda-and-serverless.wav` |
+| 09 | Containers — ECS, EKS & Fargate | _(planned)_ | `09-containers-ecs-eks-fargate.wav` |
+| 10 | S3 Fundamentals | _(planned)_ | `10-s3-fundamentals.wav` |
+| 11 | S3 Advanced — Replication & Lifecycle | _(planned)_ | `11-s3-advanced-replication-lifecycle.wav` |
+| 12 | EBS & Instance Store | _(planned)_ | `12-ebs-and-instance-store.wav` |
+| 13 | EFS, FSx & Storage Gateway | _(planned)_ | `13-efs-fsx-and-storage-gateway.wav` |
+| 14 | VPC Fundamentals | _(planned)_ | `14-vpc-fundamentals.wav` |
+| 15 | VPC Advanced — Peering & PrivateLink | _(planned)_ | `15-vpc-advanced-peering-privatelink.wav` |
+| 16 | Route 53 | _(planned)_ | `16-route-53.wav` |
+| 17 | CloudFront & Global Accelerator | _(planned)_ | `17-cloudfront-and-global-accelerator.wav` |
+| 18 | RDS & Aurora | _(planned)_ | `18-rds-and-aurora.wav` |
+| 19 | DynamoDB | _(planned)_ | `19-dynamodb.wav` |
+| 20 | ElastiCache | _(planned)_ | `20-elasticache.wav` |
+| 21 | Redshift & Other Databases | _(planned)_ | `21-redshift-and-other-databases.wav` |
+| 22 | SQS & SNS | _(planned)_ | `22-sqs-and-sns.wav` |
+| 23 | Kinesis & MSK | _(planned)_ | `23-kinesis-and-msk.wav` |
+| 24 | Step Functions & EventBridge | _(planned)_ | `24-step-functions-and-eventbridge.wav` |
+| 25 | KMS & Secrets Manager | _(planned)_ | `25-kms-and-secrets-manager.wav` |
+| 26 | Shield, WAF & Cognito | _(planned)_ | `26-shield-waf-and-cognito.wav` |
+| 27 | Shared Responsibility & Compliance | _(planned)_ | `27-shared-responsibility-and-compliance.wav` |
+| 28 | CloudWatch, CloudTrail & Config | _(planned)_ | `28-cloudwatch-cloudtrail-and-config.wav` |
+| 29 | Organizations & Service Control Policies | _(planned)_ | `29-organizations-and-service-control-policies.wav` |
+| 30 | Cost Management & Billing | _(planned)_ | `30-cost-management-and-billing.wav` |
+| 31 | High Availability & Disaster Recovery | _(planned)_ | `31-high-availability-and-disaster-recovery.wav` |
+| 32 | Well-Architected Framework | _(planned)_ | `32-well-architected-framework.wav` |
+| 33 | Migration Strategies & Transfer | _(planned)_ | `33-migration-strategies-and-transfer.wav` |
+| 34 | Solutions Architect Exam Tips | _(planned)_ | `34-solutions-architect-exam-tips.wav` |

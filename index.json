@@ -1,0 +1,88 @@
+{
+  "sections": [
+    {
+      "title": "Foundations",
+      "notebooks": [
+        "01-what-is-cloud-computing",
+        "02-aws-global-infrastructure",
+        "03-iam-fundamentals",
+        "04-iam-advanced-and-organizations"
+      ]
+    },
+    {
+      "title": "Compute",
+      "notebooks": [
+        "05-ec2-fundamentals",
+        "06-ec2-advanced-amis-placement-groups",
+        "07-elb-and-auto-scaling",
+        "08-lambda-and-serverless",
+        "09-containers-ecs-eks-fargate"
+      ]
+    },
+    {
+      "title": "Storage",
+      "notebooks": [
+        "10-s3-fundamentals",
+        "11-s3-advanced-replication-lifecycle",
+        "12-ebs-and-instance-store",
+        "13-efs-fsx-and-storage-gateway"
+      ]
+    },
+    {
+      "title": "Networking",
+      "notebooks": [
+        "14-vpc-fundamentals",
+        "15-vpc-advanced-peering-privatelink",
+        "16-route-53",
+        "17-cloudfront-and-global-accelerator"
+      ]
+    },
+    {
+      "title": "Databases",
+      "notebooks": [
+        "18-rds-and-aurora",
+        "19-dynamodb",
+        "20-elasticache",
+        "21-redshift-and-other-databases"
+      ]
+    },
+    {
+      "title": "Application Integration",
+      "notebooks": [
+        "22-sqs-and-sns",
+        "23-kinesis-and-msk",
+        "24-step-functions-and-eventbridge"
+      ]
+    },
+    {
+      "title": "Security & Compliance",
+      "notebooks": [
+        "25-kms-and-secrets-manager",
+        "26-shield-waf-and-cognito",
+        "27-shared-responsibility-and-compliance"
+      ]
+    },
+    {
+      "title": "Monitoring & Governance",
+      "notebooks": [
+        "28-cloudwatch-cloudtrail-and-config",
+        "29-organizations-and-service-control-policies",
+        "30-cost-management-and-billing"
+      ]
+    },
+    {
+      "title": "Architecture Patterns",
+      "notebooks": [
+        "31-high-availability-and-disaster-recovery",
+        "32-well-architected-framework",
+        "33-migration-strategies-and-transfer"
+      ]
+    },
+    {
+      "title": "Exam Prep",
+      "notebooks": [
+        "34-solutions-architect-exam-tips"
+      ]
+    }
+  ]
+}
