@@ -1,0 +1,57 @@
+EBS, or Elastic Block Store, is the primary block storage service for EC2. It provides durable, network-attached volumes that persist independently of the instance lifecycle. EC2 Instance Store is the alternative — physically attached NVMe storage that delivers much higher performance but is ephemeral. Knowing when to use each, and how to manage EBS volumes effectively, is a core topic for the Solutions Architect exam.
+
+Let's start with EBS fundamentals.
+
+An EBS volume is a network-attached block storage device. Think of it as a USB drive that AWS plugs into your EC2 instance over the network. Because it is network-attached, you can detach it from one instance and reattach it to another, it persists after instance termination, and there is a small network latency compared to physically attached storage.
+
+EBS volumes are AZ-scoped. A volume in us-east-1a can only be attached to an EC2 instance that is also in us-east-1a. To move a volume to a different Availability Zone or region, you must snapshot it first and create a new volume from that snapshot.
+
+Each volume attachment has a Delete on Termination flag. For root volumes, this is enabled by default, so the root disk is deleted when the instance terminates. For additional data volumes, it is disabled by default, so they survive termination. You can change this setting at launch time or while the instance is running.
+
+Most EBS volumes can only be attached to one instance at a time. The exception is io1 and io2 volumes, which support Multi-Attach — attaching a single volume to up to sixteen instances in the same Availability Zone simultaneously. Multi-Attach requires a cluster-aware filesystem. Standard Linux filesystems like ext4 or XFS will corrupt data if two instances write to the same volume concurrently without coordination.
+
+Now let's go through the EBS volume types.
+
+There are two main categories: SSD volumes and HDD volumes. SSD volumes are suitable for boot volumes and IOPS-sensitive workloads. HDD volumes are designed for sequential, throughput-heavy workloads and cannot be used as boot volumes.
+
+Within SSD, the general purpose options are gp3 and gp2. The gp3 type is the current default and is almost always preferred over gp2. The key difference is how IOPS and throughput are provisioned. With gp2, your IOPS are tied to the volume size at three IOPS per gigabyte, so to get six thousand IOPS you need a two-terabyte volume. With gp3, you always get a baseline of three thousand IOPS regardless of size, and you can provision additional IOPS and throughput independently. gp3 also supports up to one thousand megabytes per second of throughput, compared to two hundred and fifty for gp2, and costs around twenty percent less.
+
+For IOPS-intensive workloads like large production databases, the provisioned IOPS options are io1 and io2. If you need more than sixteen thousand IOPS — the gp3 maximum — you need io1 or io2. io2 is always preferred over io1 because it offers one hundred times more durability at the same price: ninety-nine point nine nine nine percent versus ninety-nine point eight to ninety-nine point nine percent. io2 Block Express is the highest-performance EBS option, supporting up to two hundred and fifty-six thousand IOPS and four thousand megabytes per second of throughput with sub-millisecond latency. It is designed for the largest enterprise databases.
+
+For HDD volumes, st1 is Throughput Optimized — designed for sequential workloads like Kafka, Hadoop, log processing, and data warehousing where you read large files sequentially. sc1 is Cold HDD, the lowest-cost EBS option, designed for data accessed less than once a day.
+
+The exam shortcut for storage type selection is: if the scenario mentions throughput-heavy sequential workloads or big data, use st1. If it mentions lowest cost with infrequent access, use sc1. If it mentions IOPS sensitivity, databases, or boot volumes, use SSD — gp3 by default, io2 for very high IOPS requirements.
+
+Now let's cover EBS snapshots.
+
+A snapshot is a point-in-time backup of an EBS volume, stored durably in S3. The first snapshot copies all the data on the volume. Each subsequent snapshot is incremental — only the blocks that changed since the last snapshot are stored. This makes snapshots space-efficient over time even on large volumes.
+
+You can take a snapshot while a volume is attached and in use. For the cleanest snapshot, quiesce writes first, but it is not required. To restore, you create a new EBS volume from the snapshot. That new volume can be in any Availability Zone in the same region, or you can copy the snapshot to a different region and create a volume there.
+
+Snapshots can also be shared with other AWS accounts, enabling cross-account data sharing and migration.
+
+There are three snapshot features worth knowing for the exam. EBS Snapshot Archive moves a snapshot to a cheaper archive tier — seventy-five percent cheaper storage — but restoring from the archive takes twenty-four to seventy-two hours. Use it for snapshots you need to retain for compliance but almost never restore. The Recycle Bin feature catches accidentally deleted snapshots. When you delete a snapshot and Recycle Bin is enabled with a retention rule, the snapshot goes into the bin and can be recovered within one to three hundred and sixty-five days before permanent deletion. Fast Snapshot Restore, or FSR, pre-warms the snapshot data so that a volume restored from it has full I/O performance immediately. Without FSR, EBS lazily loads blocks from S3 on first access, which can cause performance degradation during initialization. FSR costs more but is important when you need predictable performance right after restore.
+
+For encryption, snapshots of encrypted volumes are automatically encrypted, and volumes created from encrypted snapshots are automatically encrypted. If you have an existing unencrypted volume you want to encrypt, the process is: take a snapshot, copy the snapshot with encryption enabled on the copy, then create a new volume from the encrypted copy. This is the standard migration path.
+
+Now let's look at EBS encryption in more detail.
+
+EBS encryption uses AES-256 and AWS KMS — either the AWS-managed key for EBS, or a customer-managed KMS key you control. When a volume is encrypted, data at rest on the volume is encrypted, data in transit between the volume and the instance is encrypted, and all snapshots are encrypted. The encryption is handled by the Nitro hardware and adds negligible latency — you will not notice a performance difference.
+
+You can also enable EBS encryption by default at the account level for a given region. Once enabled, all new EBS volumes and snapshot copies in that region are automatically encrypted with the default KMS key. Existing unencrypted volumes are not retroactively encrypted.
+
+Now let's talk about EC2 Instance Store.
+
+Instance Store is physically attached NVMe storage on the EC2 host. Unlike EBS, there is no network hop — the disk is inside the same server that runs your instance.
+
+The performance difference is significant. Instance Store can deliver millions of IOPS with sub-millisecond latency — far exceeding even io2 Block Express. The trade-off is durability: Instance Store is ephemeral. Data is permanently lost when the instance is stopped, hibernated, or terminated, or when the underlying host hardware fails. Data does survive a reboot, because the instance stays on the same physical host.
+
+Instance Store is included in the instance price — there is no additional charge. The disk size is fixed per instance type and cannot be changed.
+
+The use cases where Instance Store is the right choice are: caches and buffers that are rebuilt on startup, temporary scratch space for batch jobs or machine learning training runs, and workloads where the application itself handles replication across nodes — for example, Cassandra or Elasticsearch clusters where each node holds a shard and replication across nodes provides the durability.
+
+The exam pattern to recognize is this: if the scenario says temporary, scratch, cache, highest possible IOPS, or data can be lost — Instance Store is the answer. If it says persist after termination, durable, or backup — use EBS.
+
+To bring it all together, the three storage options for EC2 are EBS, Instance Store, and EFS. EBS is network-attached block storage that is durable, AZ-scoped, and can be detached and reattached. Instance Store is physically attached, delivers the highest performance, but is ephemeral. EFS is a managed NFS filesystem that can be mounted simultaneously by thousands of instances across multiple Availability Zones — we cover EFS in the next topic.
+
+In the next topic, we cover EFS, FSx, and Storage Gateway — the file storage layer of AWS.
