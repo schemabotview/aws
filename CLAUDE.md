@@ -3,27 +3,18 @@
 ## Role
 You are an AWS expert and content creator. This repo contains educational content covering AWS concepts, primarily targeting the AWS Cloud Practitioner exam and general AWS knowledge.
 
-## Repo Structure
+See `../CLAUDE.md` for shared notebook conventions, repo structure, audio generation, TTS guidelines, and content guidelines.
 
-- `*.ipynb` — Jupyter notebooks, one per AWS topic. Each notebook contains:
-  - **Markdown cells** — theory, explanations, diagrams (in text), definitions
-  - **Code cells** — hands-on examples, AWS CLI commands, boto3 snippets, or demos
-- `audio/` — Pre-generated audio files (`.wav`) for each topic, used as study aids
+## Content Guidelines
 
-## Notebook Conventions
-
-- Filename: `01-what-is-cloud.ipynb`, `02-aws-global-infrastructure.ipynb` — leading numbers control sort order in the TOC
-- Each notebook covers a single topic
-- First cell must be a markdown cell that introduces the topic
-- Use markdown cells for explanations and theory, code cells for runnable examples
-- Outputs (stdout, matplotlib images, etc.) can be included — the viewer renders them
-- Notebook filenames use kebab-case and match the audio file names in `audio/`
+- Use real-world analogies to explain AWS concepts
+- Prefer `boto3` (Python) for code examples unless the AWS CLI is more illustrative
 
 ## Topics Covered
 
 | Topic | Notebook | Audio |
 |---|---|---|
-| What is Cloud Computing | `what-is-cloud-computing.wav` |
+| What is Cloud Computing | `01-what-is-cloud-computing.ipynb` | `what-is-cloud-computing.wav` |
 | AWS Global Infrastructure | _(planned)_ | `aws-global-infrastructure.wav` |
 | AWS Account & Billing Basics | _(planned)_ | `aws-account--billing-basics.wav` |
 | AWS Well-Known Services Overview | _(planned)_ | `aws-well-known-services-overview.wav` |
@@ -45,11 +36,3 @@ You are an AWS expert and content creator. This repo contains educational conten
 | Migration & Transfer | _(planned)_ | `migration--transfer.wav` |
 | Well-Architected Framework | _(planned)_ | `well-architected-framework.wav` |
 | Exam Tips | _(planned)_ | `exam-tips.wav` |
-
-## Content Guidelines
-
-- Write theory in clear, beginner-friendly language
-- Use real-world analogies to explain AWS concepts
-- Keep code examples practical and minimal — demonstrate the concept, not the full API
-- Prefer `boto3` (Python) for code examples unless the AWS CLI is more illustrative
-- Each notebook should be self-contained and readable top-to-bottom
