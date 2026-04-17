@@ -1,0 +1,69 @@
+Elastic Load Balancing and Auto Scaling are the two services that work together to deliver high availability and elasticity for EC2-based architectures. Elastic Load Balancing distributes incoming traffic across multiple targets. Auto Scaling adjusts the number of those targets based on demand. Together they are the foundation of every scalable, fault-tolerant AWS application.
+
+Let's start by understanding why you need a load balancer at all.
+
+A load balancer sits in front of your instances and does several important things. It distributes traffic across multiple instances so no single one gets overwhelmed. It continuously performs health checks and stops sending traffic to any instance that becomes unhealthy. It provides a single DNS endpoint to your clients — they never need to know about individual instance IP addresses, which change constantly as instances launch and terminate. It enables zero-downtime deployments by draining existing connections before removing an instance. It terminates SSL and TLS so your instances do not need to manage certificates. And it can enforce session stickiness so a client always reaches the same instance when needed.
+
+AWS offers four load balancer types. Three are current and one is legacy.
+
+The Application Load Balancer, or ALB, operates at Layer 7 — it understands HTTP and HTTPS. The Network Load Balancer, or NLB, operates at Layer 4 — it works at the TCP and UDP level. The Gateway Load Balancer, or GWLB, operates at Layer 3 and is designed for network appliances. The Classic Load Balancer is the legacy option and should never be used for new designs.
+
+Let's go through each in detail.
+
+The Application Load Balancer is the right choice for web applications, microservices, and APIs. Because it operates at Layer 7, it can make routing decisions based on the content of each request — the URL path, the host header, query string parameters, or even custom HTTP headers.
+
+The core components of an ALB are listeners, rules, and target groups. A listener checks for incoming connections on a specific port — typically port 80 for HTTP or port 443 for HTTPS. Each listener has rules that define how to handle a request. A rule has conditions — for example, the path starts with slash api, or the host is api dot example dot com — and an action to take when those conditions are met. The action can be to forward the request to a target group, redirect the client to a different URL, return a fixed static response, or split traffic between multiple target groups for canary deployments or A/B testing.
+
+A target group is a pool of targets — EC2 instances, IP addresses, Lambda functions, or other ALBs. Each target group has its own health check configuration. The load balancer only sends traffic to targets that are passing their health checks.
+
+ALB also supports SSL termination, with certificates managed through AWS Certificate Manager. It supports WebSocket connections and gRPC traffic natively. It adds an X-Forwarded-For header so your backend instances can see the original client IP address. And it integrates directly with AWS WAF for Layer 7 protection.
+
+The Network Load Balancer is built for performance and non-HTTP workloads. Because it operates at Layer 4 and does not inspect request content, it can handle millions of connections per second with latencies in the single-digit millisecond range.
+
+The key distinguishing features of the NLB are static IP addresses, preserved source IP, and UDP support. NLB provides one static IP per Availability Zone — or you can bring your own Elastic IP. This makes NLB the right choice when clients need to whitelist a fixed IP address. Unlike ALB, NLB passes the client's original IP address directly to the target without rewriting it. And NLB is the only load balancer type that supports UDP traffic, making it suitable for DNS, gaming, and IoT workloads.
+
+Choose NLB over ALB when you need a static IP, when traffic is non-HTTP, when you need the absolute lowest latency, or when you need the client's source IP preserved at the instance level.
+
+The Gateway Load Balancer is a specialised load balancer for deploying inline network appliances — third-party firewalls, intrusion detection systems, and deep packet inspection tools. Traffic flows through GWLB transparently to a fleet of appliances and back, without the source or destination being aware of it. GWLB is primarily an exam topic — you need to recognise it when a question mentions inline security appliances, but you are unlikely to configure it in a typical application architecture.
+
+Now let's talk about two important ELB behaviours: cross-zone load balancing and connection draining.
+
+By default, each load balancer node only distributes traffic to targets in its own Availability Zone. With cross-zone load balancing enabled, each node distributes traffic evenly across all targets in all Availability Zones. For ALB, cross-zone load balancing is enabled by default and there is no extra charge. For NLB and GWLB, it is disabled by default and there is an additional data transfer charge if you enable it.
+
+Connection draining — also called deregistration delay — is the grace period the load balancer gives to an instance when it is being removed. When an instance is deregistered or marked unhealthy, the load balancer stops sending it new requests but waits for any in-flight requests to complete before removing it entirely. The default wait time is three hundred seconds. You can set it anywhere from zero to thirty-six hundred seconds. For stateless applications with short requests, set it low — around thirty seconds. For workloads with long-running requests, keep it higher.
+
+Now let's move on to Auto Scaling Groups.
+
+An Auto Scaling Group manages a fleet of EC2 instances. You define three capacity numbers: the minimum — the floor, below which the ASG will never drop; the maximum — the ceiling, above which it will never go; and the desired capacity — the target count the ASG tries to maintain at all times. The ASG distributes instances across the subnets you specify, which correspond to Availability Zones, automatically balancing the fleet.
+
+Every ASG is backed by a launch template that defines what each new instance looks like — the AMI, instance type, key pair, security groups, and user data. Always use launch templates rather than the older launch configurations. Launch templates support versioning, mixed instance types, and combining Spot and On-Demand instances in the same group. Launch configurations are legacy and are being deprecated.
+
+When you attach an ASG to a load balancer target group, new instances are automatically registered when they launch and automatically deregistered when they terminate. The ASG can also use the load balancer's health checks — not just EC2 status checks — to decide whether an instance needs to be replaced.
+
+This last point is important. By default, the ASG only checks whether the EC2 instance is running. It does not know whether your application is actually healthy. If you enable ELB health checks on the ASG, it will replace any instance that is failing the application-level health check — even if the instance itself is technically running.
+
+Now let's cover the five scaling policy types.
+
+The first and most recommended is Target Tracking Scaling. You pick a metric and a target value — for example, keep average CPU utilisation at fifty percent or keep request count per target at one thousand. AWS automatically adds instances when the metric rises above the target and removes them when it falls below. You do not need to write CloudWatch alarms or define how many instances to add. AWS handles all of that.
+
+The second type is Step Scaling. You define CloudWatch alarms and specify how many instances to add or remove based on the size of the alarm breach. For example, when CPU is between fifty and seventy percent, add one instance. When CPU is between seventy and ninety percent, add two instances. When CPU is above ninety percent, add four instances. Step scaling gives you more granular control than target tracking for workloads with very spiky traffic patterns.
+
+The third type is Simple Scaling. This is the legacy predecessor to step scaling. It supports only one step and enforces a cooldown period after every scaling action, during which no further scaling can occur. It has largely been replaced by step and target tracking policies.
+
+The fourth type is Scheduled Scaling. Instead of reacting to a metric, you set the desired, minimum, and maximum capacity at specific times. For example, every weekday at eight in the morning, set desired capacity to twenty. Every weekday at eight in the evening, bring it back down to five. Use scheduled scaling for predictable traffic patterns — business hours, end-of-month processing, or known events.
+
+The fifth type is Predictive Scaling. AWS uses machine learning to analyse your historical CloudWatch data and forecast future load. It then pre-scales the ASG before demand arrives, rather than waiting to react after a metric threshold is breached. This eliminates the lag between a traffic spike and the new instances becoming available. The best practice is to combine predictive scaling with target tracking — predictive handles the anticipated load, target tracking handles any unexpected spikes.
+
+After a scaling activity, the ASG observes a cooldown period — three hundred seconds by default — before evaluating whether another scaling action is needed. This prevents rapid, repeated scaling in response to brief metric fluctuations. Target tracking and step scaling manage this internally and do not rely on the group-level cooldown.
+
+Let's look at three more advanced ASG features: Instance Refresh, Lifecycle Hooks, and Warm Pools.
+
+Instance Refresh automates the process of rolling out a new launch template version — for example, a new AMI — across the entire fleet. Instead of manually terminating and replacing instances, you initiate an instance refresh and specify a minimum healthy percentage. The ASG replaces instances in batches while keeping at least that percentage healthy at all times. You can pause or cancel the refresh at any point.
+
+Lifecycle Hooks pause an instance at a key transition point to allow custom actions. During a scale-out event, the instance pauses in a waiting state before it becomes active. You can use this time to run additional bootstrap steps, register with a service discovery system, or run validation tests — then signal the ASG to proceed. During a scale-in event, the instance pauses before termination. You can use this to drain active connections, upload logs, or deregister from external systems. The instance waits for your signal, or until the configured timeout expires — up to forty-eight hours.
+
+Warm Pools address the latency of scale-out events. A warm pool maintains a set of pre-initialised instances that are already bootstrapped and waiting, either in a stopped or running state. When the ASG needs to scale out, it moves instances from the warm pool into service in seconds rather than waiting for a new instance to launch and bootstrap from scratch. Stopped warm pool instances cost only EBS storage — you do not pay for compute unless they are moved to running.
+
+To bring it all together — the typical pattern for a scalable, highly available application on AWS is an Auto Scaling Group spanning multiple Availability Zones, fronted by an Application Load Balancer. The ALB routes traffic, performs health checks, and terminates SSL. The ASG maintains the right number of instances based on load, distributes them across AZs, and replaces unhealthy instances automatically. Target tracking keeps the fleet right-sized without manual intervention.
+
+In the next topic, we cover Lambda and serverless — a compute model where you do not manage instances at all.
