@@ -102,12 +102,12 @@
   <rect x="30"  y="80" width="114" height="72" rx="5" class="dc-fill dc-stroke" stroke-width="1.2"/>
   <text x="87"  y="109" font-size="8.5" font-weight="600" text-anchor="middle" class="lbl dc-text">Data Center</text>
   <text x="87"  y="123" font-size="7" text-anchor="middle" class="lbl muted">redundant power</text>
-  <text x="87"  y="134" font-size="7" text-anchor="middle" class="lbl muted">& networking</text>
+  <text x="87"  y="134" font-size="7" text-anchor="middle" class="lbl muted">&amp; networking</text>
   <!-- DC 1a-2 -->
   <rect x="30"  y="162" width="114" height="72" rx="5" class="dc-fill dc-stroke" stroke-width="1.2"/>
   <text x="87"  y="191" font-size="8.5" font-weight="600" text-anchor="middle" class="lbl dc-text">Data Center</text>
   <text x="87"  y="205" font-size="7" text-anchor="middle" class="lbl muted">redundant power</text>
-  <text x="87"  y="216" font-size="7" text-anchor="middle" class="lbl muted">& networking</text>
+  <text x="87"  y="216" font-size="7" text-anchor="middle" class="lbl muted">&amp; networking</text>
   <text x="87"  y="248" font-size="7" text-anchor="middle" class="lbl az-text">isolated fault domain</text>
 
   <!-- ── AZ 2 ── -->
@@ -116,11 +116,11 @@
   <rect x="170" y="80" width="114" height="72" rx="5" class="dc-fill dc-stroke" stroke-width="1.2"/>
   <text x="227" y="109" font-size="8.5" font-weight="600" text-anchor="middle" class="lbl dc-text">Data Center</text>
   <text x="227" y="123" font-size="7" text-anchor="middle" class="lbl muted">redundant power</text>
-  <text x="227" y="134" font-size="7" text-anchor="middle" class="lbl muted">& networking</text>
+  <text x="227" y="134" font-size="7" text-anchor="middle" class="lbl muted">&amp; networking</text>
   <rect x="170" y="162" width="114" height="72" rx="5" class="dc-fill dc-stroke" stroke-width="1.2"/>
   <text x="227" y="191" font-size="8.5" font-weight="600" text-anchor="middle" class="lbl dc-text">Data Center</text>
   <text x="227" y="205" font-size="7" text-anchor="middle" class="lbl muted">redundant power</text>
-  <text x="227" y="216" font-size="7" text-anchor="middle" class="lbl muted">& networking</text>
+  <text x="227" y="216" font-size="7" text-anchor="middle" class="lbl muted">&amp; networking</text>
   <text x="227" y="248" font-size="7" text-anchor="middle" class="lbl az-text">isolated fault domain</text>
 
   <!-- ── AZ 3 ── -->
@@ -129,11 +129,11 @@
   <rect x="310" y="80" width="114" height="72" rx="5" class="dc-fill dc-stroke" stroke-width="1.2"/>
   <text x="367" y="109" font-size="8.5" font-weight="600" text-anchor="middle" class="lbl dc-text">Data Center</text>
   <text x="367" y="123" font-size="7" text-anchor="middle" class="lbl muted">redundant power</text>
-  <text x="367" y="134" font-size="7" text-anchor="middle" class="lbl muted">& networking</text>
+  <text x="367" y="134" font-size="7" text-anchor="middle" class="lbl muted">&amp; networking</text>
   <rect x="310" y="162" width="114" height="72" rx="5" class="dc-fill dc-stroke" stroke-width="1.2"/>
   <text x="367" y="191" font-size="8.5" font-weight="600" text-anchor="middle" class="lbl dc-text">Data Center</text>
   <text x="367" y="205" font-size="7" text-anchor="middle" class="lbl muted">redundant power</text>
-  <text x="367" y="216" font-size="7" text-anchor="middle" class="lbl muted">& networking</text>
+  <text x="367" y="216" font-size="7" text-anchor="middle" class="lbl muted">&amp; networking</text>
   <text x="367" y="248" font-size="7" text-anchor="middle" class="lbl az-text">isolated fault domain</text>
 
   <!-- Fiber lines between AZs -->
