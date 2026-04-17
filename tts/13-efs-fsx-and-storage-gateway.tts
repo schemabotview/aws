@@ -1,0 +1,51 @@
+This topic covers the managed file storage layer of AWS: EFS for Linux shared filesystems, the FSx family for specialised workloads, and Storage Gateway for connecting on-premises environments to AWS storage. Together these services cover every file storage scenario at the Solutions Architect level.
+
+Let's start with Amazon EFS — Elastic File System.
+
+EFS is a fully managed NFS, or Network File System, that can be mounted on thousands of EC2 instances simultaneously — across multiple Availability Zones, across accounts, and even from on-premises via Direct Connect or VPN. EFS uses the NFS version 4 protocol, supports Linux only, and stores data across multiple Availability Zones automatically. Unlike EBS, you do not provision capacity — EFS grows and shrinks automatically, and you pay per gigabyte stored.
+
+To use EFS, you create mount targets — one per Availability Zone you want to access the filesystem from. Each mount target gets a private IP address in your VPC subnet, and instances mount EFS through that IP or the EFS DNS name. Security groups on the mount target control which instances can connect. All mount targets point to the same underlying filesystem, so data written through one mount target is immediately visible from all others.
+
+EFS has two performance modes. General Purpose is the default and is suitable for most workloads — web serving, content management, and home directories. Max I/O is designed for highly parallelised workloads with thousands of concurrent operations, such as big data processing and media rendering. Max I/O has higher per-operation latency, so only choose it when you genuinely need massive concurrency.
+
+For throughput, there are three modes. Elastic is the recommended default — it automatically scales throughput up and down with your workload and you pay per gigabyte transferred. This is best for spiky or unpredictable access patterns. Bursting ties baseline throughput to the size of the filesystem and lets you accumulate burst credits during quiet periods to spend during peaks — similar to gp2 EBS. Provisioned lets you set a fixed throughput independent of storage size, useful when you have a small dataset but consistently high throughput requirements.
+
+EFS also supports storage tiers. The Standard tier is for frequently accessed files. Standard Infrequent Access is roughly ninety-two percent cheaper for storage, but incurs a retrieval fee when files are read. The Archive tier is the cheapest, around ninety-five percent cheaper, for files rarely accessed. A lifecycle policy automatically moves files between tiers based on last-access time — for example, moving files to Infrequent Access after thirty days of no access and promoting them back to Standard on the next read.
+
+There is also a One Zone variant. Instead of replicating across multiple Availability Zones, One Zone EFS stores data in a single AZ and is about forty-seven percent cheaper. Use it for development environments or data that can be rebuilt if the AZ is lost.
+
+Common EFS use cases are: shared content for a web farm — multiple EC2 instances serving the same WordPress or Drupal installation — Linux home directories for users, shared configuration or code across an Auto Scaling Group, container storage in ECS or EKS, and machine learning training data shared across many GPU instances.
+
+The key exam distinction is: EFS is for Linux with multi-AZ shared access. For Windows workloads, use FSx for Windows File Server.
+
+Now let's go through the FSx family.
+
+FSx is a family of fully managed third-party filesystems. Each variant is purpose-built for a specific workload.
+
+FSx for Windows File Server is a fully managed Windows filesystem that speaks SMB — the Server Message Block protocol — and uses NTFS. It integrates with Active Directory, either your self-managed AD or AWS Managed Microsoft AD, for authentication. It supports DFS Namespaces, which let you distribute files across multiple FSx filesystems under a single unified path. You can deploy it in a Multi-AZ configuration with automatic failover to a standby filesystem in another Availability Zone. Daily automated backups go to S3. The use case is clear: Windows applications that rely on SMB shares, SQL Server workloads using a shared filesystem, and Windows user home directories.
+
+FSx for Lustre is a managed implementation of the Lustre parallel filesystem, used in high-performance computing and machine learning. It can deliver hundreds of gigabytes per second of throughput and millions of IOPS with sub-millisecond latency. The key feature is S3 integration: you link an FSx for Lustre filesystem to an S3 bucket, and files in the bucket appear in the filesystem — loaded lazily on first access. Processed results can be exported back to S3. This makes it ideal for machine learning training pipelines where training data lives in S3 and you want a high-performance filesystem layer during the training job.
+
+FSx for Lustre has two deployment types. Scratch is temporary — data is not replicated, and the filesystem is optimised for short-term processing jobs where cost matters more than durability. Persistent replicates data within the Availability Zone and is designed for long-running jobs where you need the data to survive a hardware failure.
+
+FSx for NetApp ONTAP is a managed NetApp filesystem that supports NFS, SMB, and iSCSI simultaneously. This multi-protocol support makes it useful for mixed workloads where Linux and Windows clients share the same storage. It includes NetApp features like SnapMirror for replication, space-efficient instant clones for dev and test environments, and automatic tiering of cold data to lower-cost S3 storage. The primary use case is organisations already running NetApp on-premises who want to lift and shift to AWS without retraining staff or rearchitecting applications.
+
+FSx for OpenZFS is a managed OpenZFS filesystem. It supports up to one million IOPS with sub-millisecond latency, uses NFS protocol, and provides instant snapshots and zero-cost clones through copy-on-write. Use it to lift and shift from on-premises ZFS, or for development and testing environments that need to quickly clone large datasets.
+
+Now let's cover AWS Storage Gateway.
+
+Storage Gateway bridges on-premises environments to AWS storage. It runs as a virtual machine appliance — or a hardware appliance — in your data centre, and presents AWS storage as local storage to your on-premises systems.
+
+There are four gateway types.
+
+S3 File Gateway presents an S3 bucket as an NFS or SMB file share to on-premises clients. Files written through the gateway are stored as native S3 objects, so they are accessible both through the file share and directly via the S3 API. The gateway maintains a local cache for recently accessed files, giving you low latency for hot data. All S3 storage classes are available, including Infrequent Access and Glacier via lifecycle policies. Use S3 File Gateway when you want on-premises applications to write files that land directly in S3 — for backup, archiving, or cloud processing.
+
+FSx File Gateway adds a local cache in front of FSx for Windows File Server. On-premises Windows clients access the gateway over SMB and get low latency because frequently used files are served from the local cache. Full Active Directory integration is maintained. This is designed for remote office scenarios where users need fast access to files stored centrally in FSx.
+
+Volume Gateway presents iSCSI block volumes to on-premises servers. It has two modes. In Stored mode, the entire dataset lives on-premises with full local performance, and asynchronous snapshots are sent to S3 as EBS snapshots. This gives you low latency for all data plus a cloud backup. In Cached mode, the primary data lives in S3 and only recently accessed data is cached on-premises, minimising local storage requirements. Both modes store snapshots as EBS snapshots, which can be restored directly as EBS volumes in AWS.
+
+Tape Gateway presents a virtual tape library to your existing backup software — tools like Veeam, Veritas, or Commvault. The backup software sees virtual tape drives and tape shelves exactly as it would with physical hardware. Virtual tapes are stored in S3 and can be archived to S3 Glacier or Glacier Deep Archive. This lets you replace physical tape infrastructure without changing your backup workflows or retraining staff.
+
+To summarise the gateway decision: if on-premises applications need to write files to S3, use S3 File Gateway. If remote offices need low-latency access to FSx for Windows, use FSx File Gateway. If on-premises servers need block storage with a full local copy and cloud backup, use Volume Gateway in Stored mode. If you want to minimise on-premises storage and keep primary data in S3, use Volume Gateway in Cached mode. If you want to replace physical tape drives, use Tape Gateway.
+
+In the next topic, we move to networking — starting with VPC fundamentals.
