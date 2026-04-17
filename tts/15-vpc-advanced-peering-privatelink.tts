@@ -1,0 +1,69 @@
+This topic covers advanced VPC connectivity: peering VPCs together, accessing AWS services privately with VPC endpoints and PrivateLink, scaling to many VPCs with Transit Gateway, and connecting on-premises networks to AWS via Site-to-Site VPN and Direct Connect. These are essential architectural patterns that appear heavily on the Solutions Architect exam.
+
+Let's start with VPC Peering.
+
+VPC Peering creates a direct network connection between two VPCs, allowing instances in each to communicate using private IP addresses as if they were on the same network. Peering works between VPCs in the same account, different accounts, the same region, or different regions.
+
+Two requirements must be met. First, the VPCs cannot have overlapping CIDR blocks — if both use ten dot zero dot zero dot zero slash sixteen, peering is not possible. Second, after the peering connection is accepted, you must update the route tables in both VPCs to route traffic for the peer's CIDR to the peering connection.
+
+The most important property to understand is that peering is not transitive. If VPC A peers with VPC B and VPC B peers with VPC C, traffic from A cannot reach C through B. You must create a direct peering connection between A and C if they need to communicate. This non-transitivity is why VPC Peering becomes unmanageable with many VPCs — ten VPCs in a full mesh require forty-five peering connections. For that scale, use Transit Gateway instead.
+
+Now let's cover VPC Endpoints.
+
+VPC Endpoints let you access AWS services privately from within your VPC without traffic leaving the AWS network — no Internet Gateway, no NAT Gateway, no VPN required. There are two types: Gateway Endpoints and Interface Endpoints.
+
+Gateway Endpoints are available only for S3 and DynamoDB and are completely free. They work by adding an entry to your route table — traffic destined for S3 or DynamoDB is routed to the endpoint instead of going out through a NAT Gateway. This is the recommended way to give private instances access to S3 without internet exposure.
+
+Interface Endpoints are available for most other AWS services — CloudWatch, SQS, SNS, Systems Manager, API Gateway, KMS, and many more. An Interface Endpoint creates an ENI, or Elastic Network Interface, in your subnet with a private IP address. Traffic to the AWS service is routed to that ENI and travels over the AWS backbone. Interface Endpoints have an hourly charge plus a per-gigabyte charge for data processed. When private DNS is enabled, the standard service DNS name — for example sqs dot us-east-1 dot amazonaws dot com — resolves to the private ENI IP inside your VPC, so existing application code needs no changes.
+
+Both endpoint types support endpoint policies — IAM-style resource policies that restrict what can be accessed through the endpoint. For example, you can configure a gateway endpoint policy that allows access only to a specific S3 bucket.
+
+Now let's look at AWS PrivateLink.
+
+PrivateLink lets you expose a service running in your VPC to other VPCs privately — without peering, without an Internet Gateway, and without worrying about overlapping CIDR blocks. The provider puts a Network Load Balancer in front of their service. The consumer creates an Interface Endpoint in their VPC. Traffic flows from the consumer's ENI over the AWS backbone to the provider's NLB and into the service. The VPCs do not need to be peered, and their CIDR blocks can overlap.
+
+The key distinction to keep in mind is: PrivateLink exposes a specific service, not an entire VPC. VPC Peering connects two entire VPCs. PrivateLink scales to thousands of consumer accounts; a single VPC cannot peer with thousands of others. All AWS Interface Endpoints are built on PrivateLink — so when you create an Interface Endpoint for SQS or SSM, you are using PrivateLink under the hood.
+
+Now let's cover Transit Gateway.
+
+Transit Gateway is a regional network hub that connects multiple VPCs, VPN connections, and Direct Connect gateways through a single managed gateway. It solves the full-mesh problem of VPC Peering by using a hub-and-spoke topology. Instead of each VPC peering directly with every other VPC, each VPC connects to the Transit Gateway as an attachment, and Transit Gateway routes between them.
+
+Critically, Transit Gateway supports transitive routing — traffic can flow between any two attachments through the hub. This is the fundamental capability that VPC Peering lacks.
+
+Transit Gateway also supports route segmentation through TGW route tables. You can create separate route tables for production and development attachments, preventing dev VPCs from ever reaching prod VPCs. This gives you network isolation without requiring separate Transit Gateways.
+
+VPN connections and Direct Connect Gateways can also be attached to Transit Gateway. This means a single on-premises connection can reach all VPCs attached to the TGW, rather than requiring a separate VPN or Direct Connect per VPC.
+
+For multi-account architectures, Transit Gateway can be shared across accounts using AWS Resource Access Manager. One central networking account owns the TGW and all other accounts attach their VPCs to it. This is the standard pattern for enterprise AWS deployments.
+
+For global connectivity, you can peer Transit Gateways across regions to build a global backbone.
+
+Now let's cover Site-to-Site VPN.
+
+Site-to-Site VPN creates an IPsec encrypted tunnel between your on-premises network and your AWS VPC over the public internet. There are three components. The Virtual Private Gateway is the AWS side of the tunnel and is attached to your VPC. The Customer Gateway represents your on-premises VPN device in AWS — you configure it with the public IP address of your firewall or router. The VPN Connection is the IPsec tunnel between the two.
+
+Every VPN connection has two tunnels — two separate endpoints on the AWS side — for redundancy. If one tunnel's endpoint becomes unavailable, traffic automatically fails over to the second. You should configure your on-premises device to use both tunnels.
+
+Routing can be static or dynamic. With static routing, you manually specify which CIDR blocks to route over the VPN. With BGP dynamic routing, your on-premises router and the Virtual Private Gateway exchange routes automatically — this is required for VPN CloudHub.
+
+VPN CloudHub lets you connect multiple on-premises sites to a single Virtual Private Gateway, so sites can communicate with AWS and with each other through the hub. It requires BGP on all customer gateways.
+
+The key limitations of Site-to-Site VPN: it runs over the public internet, so latency is variable. Each tunnel supports a maximum of one point two five gigabits per second. Setup takes minutes. Traffic is encrypted by default with IPsec.
+
+You can also attach a VPN connection directly to a Transit Gateway instead of a Virtual Private Gateway. This lets all VPCs attached to the TGW reach the on-premises network through a single VPN connection.
+
+Now let's cover AWS Direct Connect.
+
+Direct Connect provides a dedicated physical connection between your on-premises network and AWS, bypassing the public internet entirely. Dedicated connections come in one gigabit, ten gigabit, or one hundred gigabit speeds and require a physical port at an AWS Direct Connect location. Hosted connections are provisioned by an AWS partner and support sub-gigabit speeds as well as up to ten gigabits.
+
+A single Direct Connect connection can carry multiple Virtual Interfaces, or VIFs. A Private VIF connects to resources in a VPC using private IP addresses. A Public VIF connects to AWS public services like S3, DynamoDB, and CloudFront — using consistent dedicated bandwidth instead of the internet. A Transit VIF connects to a Transit Gateway, allowing a single Direct Connect connection to reach many VPCs.
+
+The Direct Connect Gateway solves the multi-region problem. Without it, you would need a separate Direct Connect connection per region. With a Direct Connect Gateway, a single physical connection can reach VPCs in multiple AWS regions.
+
+Two properties are critical for the exam. First, Direct Connect is not encrypted by default. It is a private physical link, but there is no cryptographic encryption. If your compliance requirements demand encryption, run a VPN tunnel over the Direct Connect connection to get both the performance of dedicated connectivity and the security of IPsec encryption. Second, provisioning a new dedicated Direct Connect connection takes weeks to months because it requires physical cabling at a colocation facility. This lead time is an important architectural consideration.
+
+For resiliency, the highest level is two Direct Connect connections from two different Direct Connect locations. For most production workloads, use one Direct Connect connection with a Site-to-Site VPN as a failover path — the VPN activates automatically via BGP if the DX connection drops.
+
+The top-level decision is straightforward. For quick setup with acceptable latency, use Site-to-Site VPN. For consistent bandwidth, low latency, and compliance requirements that prohibit internet traversal, use Direct Connect. For many VPCs, use Transit Gateway. For accessing AWS services privately without leaving the network, use VPC Endpoints — Gateway Endpoints for S3 and DynamoDB, Interface Endpoints for everything else.
+
+In the next topic, we move to Route 53 — AWS's DNS and traffic routing service.
