@@ -20,7 +20,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 03 | IAM Fundamentals | `03-iam-fundamentals.ipynb` | `03-iam-fundamentals.wav` |
 | 04 | IAM Advanced & Organizations | `04-iam-advanced-and-organizations.ipynb` | `04-iam-advanced-and-organizations.wav` |
 | 05 | EC2 Fundamentals | `05-ec2-fundamentals.ipynb` | `05-ec2-fundamentals.wav` |
-| 06 | EC2 Advanced — AMIs & Placement Groups | _(planned)_ | `06-ec2-advanced-amis-placement-groups.wav` |
+| 06 | EC2 Advanced — AMIs & Placement Groups | `06-ec2-advanced-amis-placement-groups.ipynb` | `06-ec2-advanced-amis-placement-groups.wav` |
 | 07 | ELB & Auto Scaling | _(planned)_ | `07-elb-and-auto-scaling.wav` |
 | 08 | Lambda & Serverless | _(planned)_ | `08-lambda-and-serverless.wav` |
 | 09 | Containers — ECS, EKS & Fargate | _(planned)_ | `09-containers-ecs-eks-fargate.wav` |

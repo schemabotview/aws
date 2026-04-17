@@ -1,0 +1,67 @@
+This topic builds on EC2 fundamentals and covers the advanced features that architects use to optimise performance, availability, and launch speed: the full AMI lifecycle, placement groups for controlling physical instance placement, Hibernate, and the Nitro platform.
+
+Let's start with a deeper look at the AMI lifecycle.
+
+When you call CreateImage on a running or stopped instance, AWS goes through a few steps. First, it optionally reboots the instance to ensure the filesystem is in a consistent state. Then it takes a snapshot of each attached EBS volume. Finally, it registers an AMI that points to those snapshots. The AMI itself is just metadata — the actual data lives in the EBS snapshots, which are stored in S3 under the hood, though they are not visible in your own S3 buckets.
+
+AMIs have three visibility levels. By default they are private — only your account can use them. You can share an AMI with specific AWS account IDs. Or you can make it public, allowing any AWS account to launch instances from it. One important rule: if your AMI is encrypted, you must also share the underlying KMS key with the target account, otherwise they cannot decrypt the snapshots when launching.
+
+Because AMIs are region-specific, you need to copy them if you want to use them in another region. The CopyImage operation creates a brand-new AMI with a new AMI ID and new snapshots in the target region. This is a common pattern for multi-region deployments and disaster recovery — keeping a copy of your golden AMI in a secondary region so you can recover quickly if the primary region has issues.
+
+When you no longer need an AMI, you deregister it. But note that deregistering only removes the AMI registration — it does not delete the underlying EBS snapshots. You must delete the snapshots separately, otherwise you continue paying for the storage.
+
+Now let's talk about AMI baking strategies — because the choice here has a real impact on how fast your instances launch and how consistent they are.
+
+Think of it as a spectrum. At one end you have fully bootstrapped instances — you start with a plain base AMI and run a long user data script that installs everything from scratch on every launch. This is the most flexible approach but also the slowest to launch, and there is always a risk that a package repository is unavailable or a download fails.
+
+At the other end you have fully baked AMIs — your application, dependencies, configuration, and runtime are all baked directly into the image. Launch is nearly instant and completely deterministic. The downside is that updating the image means rebuilding the AMI.
+
+Most real-world architectures use a hybrid approach: bake the operating system, runtimes, and dependencies into the AMI, then pull the application version at launch time via a short user data script. This balances launch speed with deployment flexibility.
+
+EC2 Image Builder is the AWS-native service for automating this process. You define a pipeline with a source base AMI, build components that install and configure software, test components that validate the image, and distribution settings that copy the finished AMI to target regions and share it with target accounts. When a new version of the base AMI is released — for example, a security patch — Image Builder can automatically rebuild, test, and distribute your golden AMI without manual intervention.
+
+Now let's move on to Placement Groups — one of the more nuanced EC2 topics on the exam.
+
+By default, AWS distributes your instances across underlying hardware to minimise the chance of multiple instances failing at the same time due to a single hardware failure. Placement groups let you override this default behaviour — either to pack instances closer together for performance, or spread them further apart for resilience.
+
+There are three placement group types: Cluster, Spread, and Partition.
+
+The first is Cluster placement groups.
+
+In a Cluster placement group, all instances are packed onto the same physical rack — or as close together as possible — within a single Availability Zone. The result is the lowest possible network latency between instances and network throughput of up to ten gigabits per second between them, compared to five gigabits per second normally. The trade-off is risk: if the rack has a hardware failure, all instances in the group can be affected simultaneously. Cluster placement groups are designed for high-performance computing, tightly coupled parallel jobs, and big data workloads where fast node-to-node communication is essential.
+
+The second type is Spread placement groups.
+
+In a Spread placement group, each instance is placed on a distinct underlying hardware rack, with separate power and networking. This means a hardware failure on one rack can affect only one instance. Spread groups can span multiple Availability Zones, which gives you even greater resilience. The limitation is that you can have a maximum of seven instances per Availability Zone per placement group. Spread is the right choice for a small number of critical instances that absolutely must not fail simultaneously — primary and standby database nodes, ZooKeeper quorum members, or high-availability control plane components.
+
+The third type is Partition placement groups.
+
+Partition groups are designed for large distributed systems that use rack-awareness. Instances are divided into partitions — each partition maps to a distinct set of racks with no hardware shared between partitions. A failure in one partition cannot affect instances in another partition. Partition groups support up to seven partitions per Availability Zone, and can hold hundreds of instances in total. Instances can query the instance metadata service to discover which partition they are in, which allows distributed systems like Cassandra, Kafka, HDFS, and HBase to make intelligent replication decisions. The key distinction from Spread is scale — Spread is for a handful of critical instances, while Partition is for large fleets with rack-aware replication.
+
+To summarise the choice: use Cluster when you need the lowest latency between instances. Use Spread when you have a small number of critical instances that must be isolated from each other. Use Partition when you have a large distributed system that needs rack-awareness.
+
+Next, let's cover EC2 Hibernate.
+
+Normally when you stop an EC2 instance, the contents of RAM are lost. When you restart, the instance goes through a full operating system boot. Hibernate changes this. When you hibernate an instance, AWS saves the entire contents of RAM to the root EBS volume, then stops the instance. When you restart, AWS reads the RAM image back from EBS and the instance resumes exactly where it left off — skipping the operating system boot entirely. This typically takes seconds rather than the full boot time.
+
+For Hibernate to work, a few requirements must be met. The root EBS volume must be encrypted, because the RAM dump may contain sensitive data like credentials or keys. The root volume must also be large enough to hold the RAM image. The instance RAM must be less than one hundred and fifty gigabytes. Hibernate is not supported on bare metal instances. And an instance can remain in a hibernated state for a maximum of sixty days before AWS will terminate it.
+
+Hibernate is useful for workloads with a long warm-up phase — applications that load a large dataset into memory at startup, or services that take minutes to initialise. Rather than stopping and doing a full restart with a long warm-up, you hibernate overnight and resume in seconds.
+
+Now let's look at the Nitro System — the hardware and software platform that powers modern EC2 instances.
+
+Traditional virtualisation takes a meaningful share of the host's CPU and memory to run the hypervisor. The Nitro System changes this by offloading virtualisation functions — networking, storage I/O, and security — to dedicated Nitro hardware cards. The hypervisor itself is extremely lightweight. The result is that almost all of the host's CPU and memory is available to your instance, delivering near bare-metal performance.
+
+Nitro also enables several important capabilities. EBS encryption is performed by the Nitro card at hardware speed, meaning there is no CPU overhead on your instance for encrypting and decrypting EBS I/O. Newer Nitro instances support network bandwidth of up to two hundred gigabits per second. And because the hypervisor and host are immutable, AWS operators cannot access the memory or storage of your running instance — a meaningful security guarantee.
+
+The most extreme form of the Nitro platform is bare metal instances. Bare metal instances have no hypervisor at all — your workload runs directly on the physical server hardware. Use bare metal when your software requires access to hardware features that are not exposed through virtualisation, when you need to run your own hypervisor on top of EC2 — for example, VMware Cloud on AWS — or when your software licensing is tied to physical CPU sockets.
+
+A few other features worth knowing for the exam.
+
+EC2 Instance Connect lets you connect to a Linux instance over SSH without managing long-lived SSH key pairs. AWS pushes a temporary one-time-use public key to the instance immediately before your connection, and removes it after. This works from the browser-based console or from the AWS CLI.
+
+EC2 Serial Console gives you access to an instance's serial port. This is invaluable when an instance becomes unresponsive over SSH — for example, after a bad kernel update or a network configuration mistake. It is available on Nitro-based instances.
+
+Finally, a comparison that often appears in exam scenarios: Stop versus Hibernate versus Terminate. When you stop an instance, the RAM is lost but the EBS root volume is retained and billing stops. When you hibernate, the RAM is saved to EBS and billing stops, but the instance resumes without a full boot. When you terminate, the RAM is lost and the root EBS volume is deleted by default, and billing stops. Instance store data is always lost on stop, hibernate, or terminate.
+
+In the next topic, we move to Elastic Load Balancing and Auto Scaling — the two services that work together to deliver high availability and elasticity for EC2-based architectures.
