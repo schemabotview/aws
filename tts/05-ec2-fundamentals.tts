@@ -1,0 +1,75 @@
+EC2, which stands for Elastic Compute Cloud, is AWS's virtual server service and the most fundamental compute building block in AWS. Almost every architecture involves EC2 in some form — either directly, or as the engine powering managed services behind the scenes.
+
+Understanding EC2 deeply is essential for the Solutions Architect exam. Instance types, purchasing options, storage, networking, and security groups are all heavily tested.
+
+Let's start with what EC2 actually is.
+
+An EC2 instance is a virtual machine running on AWS hardware. You choose the operating system, CPU, memory, storage, and networking. AWS handles the physical hardware underneath. When you launch an instance, you make several configuration decisions. You pick an AMI — the OS image. You pick an instance type — the CPU and memory combination. You provide a key pair for SSH access. You choose the network and subnet. You assign a security group as the firewall. You attach storage volumes. You optionally attach an IAM role so the instance can call other AWS services. And you can provide a user data script that runs automatically on first boot.
+
+Let's look at each of these in turn.
+
+First, AMIs — Amazon Machine Images.
+
+An AMI is a template that contains the operating system, application server, and any pre-installed software for an instance. There are four sources of AMIs. AWS provides its own — Amazon Linux 2, Amazon Linux 2023, Windows Server, and others. The AWS Marketplace offers third-party AMIs with pre-configured software stacks, sometimes with licensing included. Community AMIs are public images shared by other AWS users. And you can build your own custom AMIs — baking your application, configuration, and dependencies into an image.
+
+AMIs are region-specific. An AMI exists in a single region, and its ID is different in every region even for the same image. To use an AMI in another region you must copy it.
+
+The architectural significance of custom AMIs is worth emphasising. Instead of running a long bootstrap script on every instance launch, you can bake everything into the image. New instances start faster, and the configuration is guaranteed to be identical every time. This is critical when using Auto Scaling groups, where instances must be production-ready in seconds.
+
+Next, instance types.
+
+Instance type names follow a consistent pattern: the family, then the generation number, then optional attributes like processor type, and finally the size. For example, m7g dot xlarge — M family, seventh generation, Graviton processor, extra large.
+
+There are six main instance families to know. General Purpose instances, like the T3 and M7 families, offer a balanced ratio of CPU, memory, and networking. They are the default choice for web servers, development environments, and small databases. Compute Optimised instances, like the C6 and C7 families, have a higher CPU-to-memory ratio. Use them for batch processing, high-performance computing, gaming servers, and machine learning inference. Memory Optimised instances, like the R and X families, have very high memory. They are built for in-memory databases, large caches, and SAP HANA. Storage Optimised instances, like the I4 and D3 families, are built for high disk throughput and input-output operations per second. Use them for NoSQL databases, data warehouses, and distributed file systems. Accelerated Computing instances, like the P and G families, have GPUs or custom AWS chips like Trainium and Inferentia. They are built for machine learning training, inference, and video rendering. And HPC Optimised instances are for tightly coupled high-performance computing simulations.
+
+One family deserves special attention: the T series burstable instances.
+
+T3 and T4g instances run at a defined baseline CPU level and earn CPU credits when they are idle. When the workload demands more CPU than the baseline, the instance spends those credits to burst above its baseline. This makes T instances very cost-effective for workloads that are mostly idle but occasionally spike — development environments, low-traffic web servers, and small applications. T3 Unlimited mode allows sustained bursting beyond credits at an additional charge.
+
+Now let's cover EC2 purchasing options — this is one of the most exam-heavy areas in all of EC2.
+
+On-Demand instances have no commitment and full price. They are the right choice for short-term, unpredictable workloads, or anything you cannot interrupt.
+
+Reserved Instances require a one-year or three-year commitment in exchange for significant discounts — around forty percent for one year and up to seventy-two percent for three years. They are the right choice for workloads you know will run continuously — databases, backend services, anything with predictable steady-state usage. You can pay all upfront for the maximum discount, partially upfront, or nothing upfront with monthly payments.
+
+Reserved Instances also have two scope options. Regional scope applies to any Availability Zone in the region and allows you to change instance size within the same family. Zonal scope locks to a specific AZ but guarantees capacity reservation in that zone.
+
+Savings Plans are a more flexible alternative to Reserved Instances. You commit to a dollar amount of compute spend per hour for one or three years, and AWS applies the discount automatically across EC2, Lambda, and Fargate. Compute Savings Plans offer around sixty-six percent savings with maximum flexibility.
+
+Spot Instances are the most dramatic discount — up to ninety percent off On-Demand prices. The catch is that AWS can reclaim Spot instances with only a two-minute warning when it needs the capacity back. Spot instances are ideal for batch jobs, data processing pipelines, continuous integration jobs, stateless web workers, and big data workloads on services like EMR. The key rule: never use Spot for databases, critical stateful applications, or anything that cannot tolerate interruption.
+
+Dedicated Hosts give you an entire physical server dedicated to your use. The main reason to use them is bring-your-own-license — if your software licenses are tied to physical cores or sockets, a Dedicated Host lets you use those licenses on AWS. They are also used for strict compliance requirements.
+
+Dedicated Instances run on hardware that is not shared with other AWS customers, but you do not get visibility into the underlying server. They offer physical isolation without the license management features of Dedicated Hosts.
+
+Capacity Reservations let you reserve capacity in a specific Availability Zone without any commitment. You are charged whether or not you use the capacity. They are useful when you need a guaranteed capacity reservation — for example, before a big launch or during disaster recovery planning.
+
+Now let's talk about security groups.
+
+A security group is a virtual firewall that controls inbound and outbound traffic for an EC2 instance. The most important characteristic of security groups is that they are stateful. If you allow inbound traffic on a port, the response traffic is automatically allowed outbound — you do not need a separate outbound rule for it.
+
+Security groups only support Allow rules — you cannot write an explicit Deny. If no rule matches, the traffic is blocked by default. By default, all inbound traffic is blocked and all outbound traffic is allowed.
+
+An instance can have multiple security groups attached to it. The effective rules are the union of all the groups.
+
+The recommended pattern for multi-tier architectures is to reference security group IDs rather than IP addresses. For example, instead of allowing your database to accept connections from a hardcoded IP range, you configure the database's security group to allow inbound traffic from the application tier's security group ID. This means only instances that belong to the app security group can connect — and it adapts automatically as instances are added or removed.
+
+Now let's look at storage options for EC2.
+
+EC2 instances have four storage options. EBS — Elastic Block Store — is network-attached block storage. It persists after the instance is stopped and can be configured to survive termination as well. EBS is the right choice for root volumes, databases, and any data you need to keep. Instance Store is physically attached to the host server. It offers very high performance, but the data is lost permanently when the instance is stopped, terminated, or fails. Use it only for temporary data — caches, buffers, and scratch space. EFS — Elastic File System — is a managed network file system that multiple instances can mount simultaneously. Use it for shared storage across a fleet of instances. And S3 is object storage — not a block device — used for static assets, backups, and data lakes.
+
+Within EBS, the most important volume type to know is gp3 — the third-generation general purpose SSD. It is the default choice for most workloads. For databases requiring the highest performance and lowest latency, io2 Block Express provides provisioned IOPS. For sequential workloads like log processing and big data, st1 is the throughput-optimised HDD option.
+
+On the networking side, there are three types of IP addresses to understand.
+
+A private IP is always assigned to an instance and never changes. It is only reachable within the VPC. A public IP is optionally assigned at launch. It is reachable from the internet, but it changes every time the instance is stopped and restarted. An Elastic IP is a static public IPv4 address that you allocate and attach yourself. It stays the same regardless of instance restarts — useful when you need a fixed IP for DNS or firewall whitelisting. Note that Elastic IPs are free while attached to a running instance, but AWS charges you when they are allocated but not in use, to discourage hoarding them.
+
+Finally, two more concepts worth knowing: User Data and the Instance Metadata Service.
+
+User Data is a shell script you pass at launch time. It runs once as root on the first boot of the instance. You use it to install packages, pull application code, configure the operating system, or register the instance with a service. User Data is the standard way to bootstrap an instance without baking everything into an AMI.
+
+The Instance Metadata Service, or IMDS, is a special endpoint reachable only from within the instance, at the address one-six-nine dot two-five-four dot one-six-nine dot two-five-four. Code running on the instance can query it to discover its own instance ID, Availability Zone, public IP, and — most importantly — its temporary IAM role credentials. The modern version, called IMDSv2, requires a session token before making metadata requests, which protects against server-side request forgery attacks. You should always enforce IMDSv2 on new instances.
+
+To bring everything together — EC2 gives you full control over compute at the instance level. The purchasing options let you match your cost model to your workload's predictability. Security groups give you simple, stateful firewall control. And the combination of EBS, Instance Store, and IAM roles via the metadata service gives you a complete, secure, production-ready compute foundation.
+
+In the next topic, we go deeper into EC2 — covering AMI strategies, placement groups, and advanced instance features that matter for high-performance and high-availability architectures.
