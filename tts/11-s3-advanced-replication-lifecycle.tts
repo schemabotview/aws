@@ -1,0 +1,75 @@
+This topic goes deeper into S3, covering the features architects rely on for data management at scale — replication across regions and accounts, lifecycle policies that automatically tier and expire data, event notifications, Object Lock for immutable storage, and S3 Select for in-place querying.
+
+Let's start with S3 replication.
+
+S3 replication automatically copies objects from a source bucket to a destination bucket, asynchronously, after each upload. There are two types: Cross-Region Replication, or C-R-R, copies objects to a bucket in a different AWS region. Same-Region Replication, or S-R-R, copies objects to a different bucket within the same region — often to a different account.
+
+C-R-R is used for disaster recovery, data residency compliance, and reducing latency for globally distributed users. S-R-R is used for log aggregation across multiple accounts and for creating dev or test copies of production data.
+
+Both types share the same requirements. Versioning must be enabled on both the source and destination buckets. An IAM role must grant S3 permission to replicate objects on your behalf. For cross-account replication, the destination bucket policy must also allow the source account's replication role.
+
+It is important to understand what replication does and does not cover. Replication only applies to new objects uploaded after you configure the rule. Objects that existed before replication was configured are not automatically replicated — you need S3 Batch Replication for that. Object metadata, tags, and A-C-Ls are replicated. Encrypted objects using SSE-S3 and SSE-KMS are replicated, though SSE-KMS requires additional key sharing configuration. Objects stored in Glacier or Glacier Deep Archive are not replicated. And replication does not chain — if bucket A replicates to bucket B, and bucket B replicates to bucket C, an object uploaded to bucket A does not trigger B-to-C replication.
+
+Delete markers are not replicated by default. This is intentional — it protects the destination from accidental deletion cascading from the source. You can optionally enable delete marker replication if you want deletions to propagate.
+
+For strict disaster recovery requirements, you can enable Replication Time Control, or RTC. Standard replication is best-effort with no time guarantee. RTC provides an S-L-A: ninety-nine point ninety-nine percent of new objects replicated within fifteen minutes. It also enables replication metrics in CloudWatch so you can monitor replication lag. Use RTC when you need a guaranteed recovery point objective.
+
+Now let's look at lifecycle policies.
+
+Lifecycle rules let you automate two categories of action: transitioning objects to cheaper storage classes over time, and expiring objects when you no longer need them. This eliminates manual cost management entirely.
+
+Each rule applies to a scope — the entire bucket, a specific prefix like "logs slash", objects with specific tags, or objects within a size range.
+
+The transition path is one-directional. You can only move down to cheaper classes — you cannot move back up via a lifecycle rule. The typical progression looks like this: objects start in S3 Standard at upload. After thirty days, they move to Standard Infrequent Access. After ninety days, they move to Glacier Instant Retrieval. After a year, they move to Glacier Deep Archive. After seven years, they are deleted.
+
+There are minimum duration requirements between transitions. You must wait at least thirty days after creation before transitioning from Standard to Standard Infrequent Access or One Zone Infrequent Access. So the earliest you can reach Glacier from Standard via an IA step is day ninety.
+
+Expiration actions give you fine-grained control over deletion. For versioned buckets, you can delete current versions after a number of days, expire non-current versions after a number of days, and delete expired delete markers — those are markers with no non-current versions beneath them. You can also abort incomplete multipart uploads after a number of days. This last one is easy to overlook: if a multipart upload is initiated and never completed, the parts accumulate storage charges indefinitely. Setting a seven-day abort rule on all buckets is good hygiene.
+
+The combination of these rules for a versioned bucket typically looks like: transition current versions to Standard Infrequent Access after thirty days, transition to Glacier after ninety, expire non-current versions after sixty days, delete expired delete markers, and abort incomplete multipart uploads after seven days.
+
+Next is S3 event notifications.
+
+S3 can emit events when objects are created, deleted, restored from Glacier, or fail replication — and route those events to downstream systems for processing.
+
+The main event types are object created, which fires on any PUT, POST, COPY, or completed multipart upload; object removed, which fires on deletion or delete marker creation; object restore, which fires when a Glacier restore is initiated or completed; and replication failure events.
+
+There are four destinations. SQS queues events for reliable asynchronous processing. SNS fans events out to multiple subscribers simultaneously. Lambda triggers immediate processing — resizing an image, extracting metadata, validating a file. EventBridge routes events with advanced filtering, supports multiple targets per rule, and provides event archiving and replay.
+
+For simple use cases with a single downstream target, direct notifications to SQS, SNS, or Lambda are fine. When you need to route events to multiple targets based on different conditions — for example, send JPEG uploads to a thumbnail Lambda while sending CSV uploads to an ETL queue and logging everything to CloudWatch — EventBridge is the better choice. EventBridge receives all S3 events when enabled, supports rich filter rules, and handles multiple targets per rule.
+
+Now let's cover Object Lock.
+
+Object Lock implements write-once, read-many storage — objects cannot be modified or deleted for a specified retention period. This is used for compliance scenarios where data integrity must be guaranteed.
+
+There are two retention modes. Governance mode protects objects, but users with a specific IAM permission can override the lock and delete objects if needed. It provides internal protection with an escape hatch. Compliance mode is absolute — no one can delete or modify the object during the retention period, not even the root account. Use Compliance mode for strict regulatory requirements under laws like S-E-C Rule 17a-4, FINRA, or HIPAA.
+
+The retention period is a fixed number of days or a specific date. Once the period expires, the object can be deleted normally.
+
+Legal Hold is a separate concept. It places an indefinite lock on an object with no expiry date, used during litigation or active investigation. Any user with the put object legal hold permission can place or remove a legal hold, independently of any retention period.
+
+There are two requirements to know: Object Lock must be enabled when the bucket is created — it cannot be added to an existing bucket. And when Object Lock is enabled, versioning is automatically turned on.
+
+The exam distinction to keep sharp is this: Compliance mode means nobody can delete the object, not even root. Governance mode means it is protected, but an override is possible with the right IAM permission.
+
+Now let's look at S3 Select.
+
+S3 Select lets you run SQL queries against the content of an S3 object, filtering and projecting data server-side without downloading the entire file. Instead of pulling a one-gigabyte CSV to your application and filtering it there, you send a SELECT statement to S3, and S3 returns only the matching rows. This reduces data transfer and processing costs significantly.
+
+S3 Select supports C-S-V, JSON, and Parquet formats. Compression with gzip and bzip2 is also supported. The query syntax is a subset of SQL — SELECT, WHERE, and basic projections.
+
+Glacier Select applies the same concept to objects archived in Glacier Flexible Retrieval. You can filter at the archive level before paying for a full restore, which is useful when you only need a slice of a large archive.
+
+Next is S3 Batch Operations.
+
+S3 Batch Operations lets you run a single action across billions of objects in one managed job. You provide an input manifest — either an S3 Inventory file or a CSV you generate — and specify the operation. Supported operations include copying objects to another bucket, invoking a Lambda function on every object, replacing ACLs, adding or removing tags, restoring objects from Glacier, and replicating existing objects.
+
+The replication operation is the most commonly tested one. When you configure replication today, it only applies to new objects. For the millions of objects that already exist, you run a Batch Replication job to backfill them into the destination.
+
+Batch Operations generates a completion report and can send notifications when the job finishes. This makes it auditable and production-safe for large-scale operations.
+
+Finally, S3 Storage Lens.
+
+S3 Storage Lens provides organization-wide visibility into S3 usage, activity, and cost optimisation opportunities. It works across all accounts in an AWS Organization, surfacing metrics in a single dashboard. It highlights problems like unused buckets, objects without lifecycle rules, large amounts of non-current version storage, and incomplete multipart uploads accumulating costs. It can recommend specific cost savings — for example, identifying buckets where eighty percent of data is over ninety days old but has no lifecycle rule. Metrics can also be exported to S3 for querying with Athena.
+
+In the next topic, we move to block storage — EBS and EC2 Instance Store.
