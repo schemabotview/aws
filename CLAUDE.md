@@ -24,7 +24,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 07 | ELB & Auto Scaling | `07-elb-and-auto-scaling.ipynb` | `07-elb-and-auto-scaling.wav` |
 | 08 | Lambda & Serverless | `08-lambda-and-serverless.ipynb` | `08-lambda-and-serverless.wav` |
 | 09 | Containers — ECS, EKS & Fargate | `09-containers-ecs-eks-fargate.ipynb` | `09-containers-ecs-eks-fargate.wav` |
-| 10 | S3 Fundamentals | _(planned)_ | `10-s3-fundamentals.wav` |
+| 10 | S3 Fundamentals | `10-s3-fundamentals.ipynb` | `10-s3-fundamentals.wav` |
 | 11 | S3 Advanced — Replication & Lifecycle | _(planned)_ | `11-s3-advanced-replication-lifecycle.wav` |
 | 12 | EBS & Instance Store | _(planned)_ | `12-ebs-and-instance-store.wav` |
 | 13 | EFS, FSx & Storage Gateway | _(planned)_ | `13-efs-fsx-and-storage-gateway.wav` |

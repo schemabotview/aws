@@ -1,0 +1,83 @@
+Amazon S3, which stands for Simple Storage Service, is AWS's object storage service. It is infinitely scalable, designed for eleven nines of durability, and foundational to virtually every AWS architecture. S3 stores files called objects in containers called buckets and serves them over HTTP.
+
+S3 is one of the most heavily tested services on the Solutions Architect exam — storage classes, security, versioning, performance, and access patterns all appear regularly.
+
+Let's start with the basic building blocks: buckets and objects.
+
+A bucket is a container for objects. Bucket names must be globally unique across all AWS accounts and all regions worldwide — not just within your account. Names must be between three and sixty-three characters, lowercase, with no underscores and no IP-address-style names. Buckets are created in a specific region, and data never leaves that region unless you explicitly configure replication.
+
+An object is a file plus its metadata. Each object has a key — the full name of the object, like images slash two-thousand-twenty-four slash photo dot jpg. S3 is a flat storage system; it has no real directories. The forward slash in a key name is just a character — S3 uses it cosmetically to simulate folders in the console, but underneath it is all one flat namespace.
+
+Objects can be up to five terabytes in size. You can upload a single object up to five gigabytes in one PUT request. For anything larger, or for anything over a hundred megabytes for best performance, you should use multipart upload. Objects also have metadata — system metadata like content type and ETag, plus up to two kilobytes of user-defined metadata you can attach.
+
+Now let's go through the storage classes — this is one of the highest-priority topics for the exam.
+
+S3 Standard is the default. It offers the highest availability at ninety-nine point ninety-nine percent, no minimum storage duration, and immediate retrieval. Use it for frequently accessed data.
+
+S3 Intelligent-Tiering automatically moves objects between access tiers based on actual usage patterns. It has no retrieval fee and no minimum duration. There is a small monthly monitoring and automation fee per object. The key benefit is that you do not need to know your access patterns in advance — Intelligent-Tiering figures it out for you. Use it when access patterns are unknown or unpredictable.
+
+S3 Standard Infrequent Access, or Standard-IA, is designed for data you access less than once a month but need to retrieve immediately when you do. It is cheaper for storage than Standard but has a per-gigabyte retrieval fee. There is a thirty-day minimum storage duration — if you delete an object before thirty days, you are still charged for the full thirty.
+
+S3 One Zone Infrequent Access is similar to Standard-IA but stores data in only one Availability Zone. It is about twenty percent cheaper, but if that AZ is destroyed, the data is lost permanently. Only use One Zone-IA for data you can recreate — thumbnail images, transcoded video variants, derived data.
+
+S3 Glacier Instant Retrieval is for data you archive and access roughly once per quarter. It has millisecond retrieval — the same speed as Standard — but costs much less for storage. The minimum duration is ninety days.
+
+S3 Glacier Flexible Retrieval is for backups and disaster recovery data that you rarely access and can tolerate hours of retrieval time. Standard retrieval takes three to five hours. Bulk retrieval can take five to twelve hours but is free. The minimum duration is ninety days.
+
+S3 Glacier Deep Archive is the cheapest storage class on AWS. Retrieval takes twelve to forty-eight hours. The minimum duration is one hundred and eighty days. Use it for long-term compliance archives — records you are legally required to retain for seven or more years but almost never actually read.
+
+Two exam distinctions to keep sharp: Glacier Instant gives you millisecond retrieval just like Standard, while Glacier Flexible takes hours. And Standard-IA versus One Zone-IA — if data is reproducible, One Zone-IA saves twenty percent. If data is irreplaceable, use Standard-IA.
+
+Now let's cover S3 security.
+
+By default, all buckets and all objects in S3 are completely private. Nothing is public unless you explicitly make it so.
+
+There are four layers of access control. The first and most important is bucket policies — JSON resource-based policies attached directly to a bucket. They can allow or deny access from specific IAM users, roles, entire AWS accounts, or even the public. Bucket policies also support conditions — for example, allow access only from a specific VPC endpoint.
+
+The second layer is IAM policies attached to users or roles. These work through standard IAM evaluation and are most useful for same-account access.
+
+The third layer is Block Public Access — a set of four override settings that prevent public access regardless of what your bucket policy or ACLs say. Block Public Access is enabled by default on all new buckets and can also be enforced at the account level. You must explicitly disable it before making a bucket or object publicly accessible.
+
+The fourth layer is ACLs — Access Control Lists. These are legacy and mostly disabled on new buckets. Unless you have a very specific reason to use them, leave ACLs off and manage access through bucket policies and IAM.
+
+The access decision follows a clear priority order. First, if Block Public Access is enabled and the request is public, it is denied. Second, any explicit deny in any applicable policy overrides everything and denies the request. Third, for cross-account access, both the IAM policy on the requester and the bucket policy on the bucket must allow the action. For same-account access, either the IAM policy or the bucket policy is sufficient.
+
+Now let's cover encryption.
+
+S3 supports several encryption options. Server-side encryption with S3-managed keys, called SSE-S3, has been the default for all new objects since January 2023. AWS manages the keys entirely, uses AES two-fifty-six, and there is no extra cost. Most workloads only need this.
+
+Server-side encryption with KMS keys, called SSE-KMS, gives you more control. You can manage your own KMS key, set rotation policies, and get a detailed audit trail in CloudTrail showing every time the key was used to decrypt an object. The trade-off is cost — every S3 GET and PUT with SSE-KMS triggers a KMS API call, which has a per-request charge. You can reduce this cost by enabling S3 Bucket Keys, which generates a short-lived data key per bucket rather than calling KMS per object.
+
+Server-side encryption with customer-provided keys, called SSE-C, means you manage the encryption key entirely. You send the key with each request and AWS uses it to encrypt or decrypt — but AWS never stores the key. You must use HTTPS for SSE-C requests. This is for organisations with strict requirements around where encryption keys live.
+
+Client-side encryption means you encrypt the data before it ever leaves your application. S3 stores the ciphertext. You manage everything. Use this when you need end-to-end encryption and cannot trust AWS with even the encrypted key material.
+
+For transit, always enforce HTTPS. You can add a bucket policy that denies any request where the SecureTransport condition is false — this blocks any HTTP access to the bucket.
+
+Now let's talk about versioning.
+
+When versioning is enabled on a bucket, S3 keeps every version of every object. Overwriting a file creates a new version rather than replacing the old one. Deleting a file without specifying a version ID does not actually delete it — S3 adds a delete marker, which becomes the latest version. The previous versions still exist and can be retrieved. To permanently delete an object version, you must specify the exact version ID in the delete request.
+
+Once versioning is enabled, it cannot be fully disabled — you can only suspend it. Suspended versioning stops creating new versions but preserves existing ones. Objects uploaded before versioning was enabled have a null version ID.
+
+One important operational consideration: all versions count toward your storage costs. Use lifecycle rules to automatically expire old versions after a certain number of days or keep only the most recent N versions.
+
+MFA Delete adds an extra layer of protection on top of versioning. With MFA Delete enabled, permanently deleting a version or changing the versioning state requires authentication with an MFA device. It can only be enabled by the root account and is a strong safeguard against accidental or malicious mass deletion.
+
+Now let's look at performance.
+
+S3 automatically scales to very high request rates — up to three thousand five hundred write requests and five thousand five hundred read requests per second per prefix. To multiply this throughput, spread your objects across multiple prefixes. Using three distinct prefixes gives you three times the read throughput baseline.
+
+For large file uploads, multipart upload splits the file into parts, uploads them in parallel, and S3 assembles them. It is recommended for files over a hundred megabytes and required for files over five gigabytes. Each part is between five megabytes and five gigabytes, except the last part which can be smaller. The big advantage is resilience — if one part fails, you retry only that part.
+
+S3 Transfer Acceleration speeds up uploads from geographically distant locations. Instead of sending data over the public internet all the way to your S3 bucket's region, the upload goes to the nearest CloudFront edge location and then travels over AWS's private, high-speed backbone network to S3. This can cut upload times significantly for users far from your bucket's region.
+
+Byte-range fetches let you download specific byte ranges of an object in parallel — effectively a multipart download. This speeds up large downloads and also lets you retrieve just the header or a specific section of a large file without downloading the whole thing.
+
+For accessing private objects, pre-signed URLs are essential. A pre-signed URL is a time-limited URL that grants temporary access to a specific object. You generate it using an IAM identity that has permission to access the object, and the URL inherits those permissions. The default expiry is one hour. The maximum is seven days when generated with STS credentials. Pre-signed URLs are the standard way to share private S3 content — either for download or for direct browser upload without routing through your backend.
+
+S3 Access Points let you create named network endpoints on a bucket, each with its own access policy. This is useful when multiple applications share a single bucket — each application gets its own access point with policies scoped to just the prefixes it needs. Access points can also be restricted to VPC-only traffic, preventing any internet access.
+
+Finally, S3 can host static websites directly. You enable the static website hosting feature, set an index document and an error document, and S3 serves the files over HTTP. For production, put CloudFront in front of S3. Use Origin Access Control, or OAC, so only CloudFront can read from the bucket — the bucket itself stays private. Add an ACM certificate for HTTPS and a custom domain, and you have a fully serverless, globally distributed static website with no infrastructure to manage.
+
+In the next topic, we go deeper into S3 — covering replication, lifecycle policies, event notifications, and S3 Select.
