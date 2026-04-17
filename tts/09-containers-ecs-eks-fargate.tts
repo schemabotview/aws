@@ -1,0 +1,63 @@
+Containers package your application code, runtime, libraries, and configuration into a single portable unit that runs consistently across any environment. AWS offers managed services to run containers at scale without managing the underlying infrastructure.
+
+The three main container services on AWS are ECS — AWS's native container orchestration service — EKS, which is managed Kubernetes, and Fargate, which is the serverless compute engine that powers both ECS and EKS.
+
+Let's start by understanding where containers fit relative to virtual machines and serverless functions.
+
+A virtual machine runs a full guest operating system on top of a hypervisor. It is the heaviest option — slowest to start, most isolated, and gives you full OS control. A container shares the host operating system kernel but packages the application and its dependencies in an isolated unit. Containers are lightweight, start in seconds, and run identically across dev, test, and production. A serverless function like Lambda is the lightest option — millisecond startup, no management at all, but limited to fifteen minutes per invocation.
+
+Containers are the right choice for microservices, long-running processes that exceed Lambda's fifteen-minute limit, applications that need more control than Lambda allows, and workloads you want to run identically in every environment including on-premises.
+
+Before running containers, you need somewhere to store the container images. That is what Amazon ECR does.
+
+ECR — Elastic Container Registry — is AWS's managed Docker image registry. Think of it as a private Docker Hub that is fully integrated with IAM for access control. Each AWS account gets a private registry per region. You can also publish images publicly via the public ECR registry. ECR scans images for vulnerabilities, either on every push or continuously using Amazon Inspector. Lifecycle policies let you automatically expire old image versions to control storage costs. Images are encrypted at rest using KMS, and ECR supports cross-region and cross-account replication for DR and multi-region deployments.
+
+Now let's dive into Amazon ECS — Elastic Container Service.
+
+ECS is AWS's native container orchestration service. It handles scheduling, placement, scaling, and health monitoring of your containers across a cluster.
+
+The building blocks of ECS are four things: the cluster, the task definition, the task, and the service.
+
+A cluster is a logical grouping of compute capacity — either EC2 instances you manage, or Fargate capacity managed by AWS. The cluster is where your tasks run.
+
+A task definition is a blueprint — a JSON document that describes how your containers should run. It specifies the container image, how much CPU and memory to allocate, which ports to expose, environment variables, log configuration, and the IAM roles the task needs.
+
+A task is a running instance of a task definition. One task can contain one or more containers that run together on the same host and share networking and storage.
+
+A service maintains a desired number of tasks running at all times. If a task fails its health check or crashes, the service automatically replaces it. Services integrate with Elastic Load Balancing and support rolling deployments when you update the task definition.
+
+There are two important IAM roles in ECS, and confusing them is a common mistake. The task execution role is used by the ECS agent itself — it needs permission to pull your container image from ECR and to write logs to CloudWatch. The task role is used by the code running inside your container — it gives your application permission to call other AWS services like DynamoDB or S3.
+
+Now let's look at the two launch types: EC2 and Fargate.
+
+With the EC2 launch type, you are responsible for the EC2 instances in your cluster. You choose the instance type and AMI, manage patching and scaling, and pay for the instances whether or not they are running tasks. This gives you full control and is more cost-effective at large scale. It is also the right choice for GPU workloads or specific instance types that Fargate does not support.
+
+With the Fargate launch type, AWS manages all the underlying infrastructure. You define your task's CPU and memory requirements, and AWS provisions the right compute automatically. You pay per task by the second — only for what you actually run. There are no idle instances, no patching, and no capacity management. Fargate is the right default for most new ECS workloads.
+
+For networking, ECS supports several modes. The recommended mode for both Fargate and EC2 is awsvpc. In awsvpc mode, each task gets its own Elastic Network Interface and private IP address in your VPC. This means you can assign a security group directly to the task, just like you would to an EC2 instance. Fargate requires awsvpc — it is not optional there. Older modes like bridge and host are available for EC2 launch type but are generally not recommended for new workloads.
+
+When you attach an ECS service to an Application Load Balancer, ECS automatically registers tasks into the target group when they launch and deregisters them when they terminate. This makes zero-downtime rolling deployments straightforward.
+
+ECS services integrate with Application Auto Scaling to adjust the number of running tasks. You can use target tracking — for example, keep average CPU at seventy percent — or step scaling based on CloudWatch alarms, or scheduled scaling for predictable patterns. For the EC2 launch type, you also need to scale the underlying EC2 instances. ECS Capacity Providers, backed by Auto Scaling Groups, handle this automatically. With Fargate, there is no underlying capacity to manage.
+
+Now let's move on to Amazon EKS — Elastic Kubernetes Service.
+
+EKS is AWS's managed Kubernetes service. Kubernetes is an open-source container orchestration system that has become the industry standard. With EKS, AWS manages the Kubernetes control plane — the API server, the etcd state store, the scheduler, and the controller manager. You are responsible for the worker nodes, unless you use Fargate.
+
+The key question for the exam is when to choose EKS over ECS.
+
+Choose EKS when your team already knows Kubernetes and has existing manifests and tooling. Choose EKS when you need portability — Kubernetes configurations work the same on AWS, on Google Cloud, on Azure, or on-premises. Choose EKS when you need the Kubernetes ecosystem — Helm charts, operators, service meshes like Istio, or custom schedulers. Choose EKS for very large microservices architectures with complex dependency and scheduling requirements.
+
+Choose ECS when you are starting fresh on AWS with no existing Kubernetes investment. ECS is simpler to learn, cheaper at small scale — EKS charges ten cents per hour for the control plane — and integrates more natively with other AWS services.
+
+EKS supports three types of worker nodes. Managed Node Groups are the recommended default. AWS handles launching the EC2 instances, applying updates, draining nodes before replacement, and terminating them — all with zero downtime. You choose the instance type and the group scales via an Auto Scaling Group. Self-Managed Nodes give you complete control — you bring your own AMI, manage the lifecycle yourself. Use this for custom kernels, Windows nodes, or very specific hardware requirements. Fargate Profiles let you run Kubernetes pods without any EC2 nodes at all. You define a Fargate profile with namespace and label selectors, and any pod matching those selectors runs on Fargate. AWS allocates compute automatically. The trade-off is that EKS Fargate does not support DaemonSets, privileged containers, GPU workloads, or EBS persistent volumes. If you need shared persistent storage on EKS Fargate, use EFS instead.
+
+For the exam, the ECS versus EKS decision usually comes down to a few clear signals. If the scenario mentions an existing Kubernetes cluster, migrating from on-premises Kubernetes, or needing to run the same workload across multiple clouds, the answer is EKS. If the scenario is a new AWS-native workload with no Kubernetes requirement, ECS with Fargate is almost always the right answer — it is simpler, cheaper at small scale, and requires less operational overhead.
+
+There is one more service worth knowing: AWS App Runner.
+
+App Runner is the simplest way to deploy a containerised web application on AWS. You point it at a container image in ECR or a source code repository on GitHub, and App Runner handles everything — building, deploying, load balancing, TLS certificates, health checks, and scaling. There is no cluster to create, no task definition to write, and no service to configure. You get an HTTPS endpoint in minutes. App Runner is the right choice for simple web APIs, internal tools, and small microservices where you want the lowest possible operational overhead. For production microservices at scale with fine-grained control, ECS Fargate remains the better choice.
+
+To bring it all together — the typical container deployment pattern on AWS is: store your image in ECR, define your task in an ECS task definition, run it as an ECS service on Fargate, attach the service to an Application Load Balancer, and let ECS Application Auto Scaling adjust the task count based on demand. This gives you a fully managed, auto-scaling, highly available container deployment with no servers to manage.
+
+In the next topic, we move to storage — starting with S3, the foundational object storage service that underpins a huge portion of AWS architectures.
