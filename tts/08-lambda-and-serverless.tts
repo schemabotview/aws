@@ -1,0 +1,77 @@
+Serverless means you write code and AWS handles everything else — provisioning servers, patching, scaling, and high availability. You pay only for the compute time your code actually uses, down to the millisecond.
+
+AWS Lambda is the core of serverless compute on AWS. It runs your code in response to events, scales automatically from zero to thousands of concurrent executions, and charges nothing when your code is not running.
+
+Let's start by understanding how Lambda compares to traditional EC2-based compute.
+
+With EC2, you launch and manage instances. You are responsible for scaling, high availability, and OS patching. You pay per hour whether or not your application is handling traffic. With Lambda, AWS manages all the infrastructure. Scaling is automatic and instant. High availability is built in. You pay only per request and per millisecond of execution time. At zero traffic, your cost is zero.
+
+That said, serverless is not always the right choice. It excels at event-driven, intermittent, or unpredictable workloads. Long-running, stateful, or CPU-intensive jobs often suit EC2 or containers better. And Lambda has a hard fifteen-minute maximum execution time per invocation, so it is not suitable for jobs that run longer than that.
+
+Now let's look at how Lambda actually works.
+
+When an event triggers your function, Lambda finds or creates an execution environment — a sandboxed micro virtual machine. It initialises your runtime and runs any initialisation code you have outside the handler function. Then it calls your handler with the event payload and a context object. After your function returns, Lambda keeps the environment warm for a short period in case another invocation arrives, avoiding the cost of creating a new environment.
+
+Your handler function takes two arguments. The first is the event — a dictionary containing the trigger payload. The second is the context object, which provides runtime information like the function name, the remaining execution time in milliseconds, and the request ID. Your handler returns a response, which is passed back to the caller for synchronous invocations, or routed to a destination for asynchronous ones.
+
+One important pattern to know: any code you write outside the handler function runs only once per execution environment, not on every invocation. This is called initialisation code or init code. You should use this to set up expensive objects — database connections, SDK clients, loaded machine learning models — that you want to reuse across warm invocations.
+
+Next, let's cover runtimes and deployment options.
+
+Lambda supports Python, Node.js, Java, Go, Ruby, and .NET out of the box. For any other language, you can provide a custom runtime based on Amazon Linux. You can also package your function as a container image up to ten gigabytes in size, which is useful for large dependencies or machine learning models.
+
+For standard deployments, you package your code as a zip file. Small functions can be edited directly in the console up to three megabytes. Larger deployments up to two hundred and fifty megabytes unzipped are uploaded via S3.
+
+Lambda Layers let you separate shared libraries and dependencies from your function code. A layer is a zip archive attached to one or more functions. Up to five layers can be attached to a single function. Layers are versioned, and they can be shared across functions or even across AWS accounts. The typical use case is a layer containing common packages like numpy and pandas that many functions in your account need.
+
+Now let's talk about Lambda configuration — the key settings that affect performance and cost.
+
+Memory is the most important configuration knob. You can allocate anywhere from one hundred and twenty-eight megabytes to ten thousand two hundred and forty megabytes. The critical insight is that CPU is allocated proportionally to memory. At one thousand seven hundred and sixty-nine megabytes, your function gets exactly one full virtual CPU. Above that, you get proportionally more. If your function is CPU-bound — doing heavy computation — increase the memory allocation even if you do not need the extra RAM, because that is the only way to get more CPU.
+
+Timeout can be set from one second up to nine hundred seconds, which is fifteen minutes. If your function runs longer than the configured timeout, Lambda terminates it. Set the timeout to a reasonable upper bound for your workload, not the maximum.
+
+Ephemeral storage in the slash tmp directory can be configured from five hundred and twelve megabytes up to ten gigabytes. This storage is local to the execution environment and persists across warm invocations within the same environment. Use it for caching downloaded files or intermediate computation results.
+
+Environment variables are key-value pairs available to your code at runtime. They are encrypted at rest using KMS. The total size of all environment variables cannot exceed four kilobytes.
+
+Now let's cover cold starts and warm starts — a topic that comes up constantly in Lambda discussions and on the exam.
+
+A cold start happens when Lambda has to create a brand new execution environment. This involves downloading your deployment package, starting the language runtime, and running your initialisation code. All of this happens before your handler is even called, so it adds latency to that first request.
+
+Cold start latency varies by runtime. Python and Node.js cold starts are typically one hundred to two hundred milliseconds. Java and .NET are slower — five hundred milliseconds to over a second — because of the time required to start the JVM or CLR. Container image functions can be even slower for very large images.
+
+A warm start happens when Lambda reuses an existing execution environment. Your initialisation code does not run again — only the handler is called. This is much faster.
+
+The main strategies to reduce cold start impact are: use Provisioned Concurrency to pre-warm a fixed number of environments so they are always ready; keep your deployment package small so code download is fast; keep your initialisation code lean; and favour Python or Node.js over Java for latency-sensitive workloads.
+
+Provisioned Concurrency is the strongest solution for eliminating cold starts on customer-facing APIs. You pay for the pre-warmed environments even when they are idle, so it is a cost trade-off worth making only for latency-sensitive functions.
+
+Now let's cover the three invocation types — this is important for the exam.
+
+Synchronous invocation means the caller waits for your function to complete and receives the response directly. API Gateway, Application Load Balancer, Lambda Function URLs, and direct SDK or CLI invocations are all synchronous. If your function throws an error, the error is returned to the caller immediately. Lambda does not retry automatically for synchronous invocations.
+
+Asynchronous invocation means Lambda queues the event and returns immediately to the caller with a two-oh-two accepted status. Lambda then processes the event in the background. If your function fails, Lambda automatically retries up to two times with exponential backoff between attempts. Common asynchronous sources are S3 events, SNS notifications, EventBridge rules, and CloudWatch Logs subscriptions. After all retries are exhausted, Lambda can send the failed event to a Dead Letter Queue — either an SQS queue or an SNS topic — for inspection and reprocessing.
+
+Lambda Destinations are the modern evolution of Dead Letter Queues. With destinations, you can route invocation results — both successes and failures — to SQS, SNS, EventBridge, or another Lambda function. Destinations carry the full event and response payload, making them more useful for debugging than DLQs.
+
+The third invocation type is poll-based, also called event source mapping. Lambda polls the source service and invokes your function in batches. SQS, Kinesis Data Streams, DynamoDB Streams, and Managed Kafka are all poll-based. For Kinesis and DynamoDB Streams, Lambda processes one batch per shard, preserving ordering within each shard. For SQS Standard queues, ordering is not preserved but Lambda can scale up to one thousand concurrent invocations. For SQS FIFO queues, ordering is preserved per message group.
+
+Now let's talk about concurrency — how many instances of your function run simultaneously.
+
+Your AWS account has a concurrency limit per region — one thousand by default, which can be increased. Reserved concurrency lets you guarantee a specific function a portion of that limit. If you set reserved concurrency to three hundred on a function, that function always has three hundred available, but it also cannot exceed three hundred — it acts as both a floor and a ceiling. Setting reserved concurrency to zero effectively disables the function, which is useful for quickly stopping a runaway function.
+
+Provisioned concurrency pre-initialises a set number of environments. Those environments have no cold start because they are already running and waiting for requests. You pay for them continuously, even when idle, so provision only what you need for your latency-sensitive baseline traffic.
+
+When a function exceeds its concurrency limit, Lambda throttles it and returns an HTTP four-twenty-nine too many requests error. For asynchronous invocations, Lambda queues and retries. For synchronous invocations, the throttle error is returned directly to the caller.
+
+On the permissions side, Lambda uses two IAM concepts. The execution role is attached to the function and determines what AWS services the function can call — like DynamoDB, S3, or Secrets Manager. The resource-based policy controls who can invoke the function — it is what allows API Gateway or S3 to trigger your function. When you add a trigger in the console, AWS automatically adds the appropriate resource-based policy entry.
+
+For networking, Lambda runs outside your VPC by default, in an AWS-managed network. It has internet access and can reach public AWS service endpoints. If your function needs to access private resources — an RDS database, an ElastiCache cluster, or an internal service — you configure it to run inside your VPC by selecting a subnet and security group. Once inside a VPC, the function loses direct internet access. If it needs to call external APIs or reach public AWS services, you must route traffic through a NAT Gateway. AWS uses shared Hyperplane network interfaces to attach Lambda to your VPC, which significantly reduces the cold start overhead that older VPC Lambda configurations had.
+
+Finally, Lambda at Edge lets you run Lambda functions at CloudFront edge locations — physically close to your users, without the round-trip to your origin region. You can intercept and modify requests and responses at four points in the CloudFront flow: the viewer request before cache lookup, the origin request before forwarding to your backend, the origin response before caching, and the viewer response before returning to the user. Common use cases are authentication at the edge, A/B testing, URL rewrites, and personalised responses. For simpler tasks like header manipulation and URL redirects, CloudFront Functions are a lighter and cheaper alternative, executing in under a millisecond using JavaScript.
+
+Lambda does not work alone — it sits at the centre of a broader serverless ecosystem. API Gateway provides an HTTP and WebSocket API front door. DynamoDB gives you a serverless NoSQL database with on-demand pricing. S3 triggers Lambda on file events. SQS and SNS provide serverless messaging to decouple producers from consumers. EventBridge is the serverless event bus for routing events from AWS services and your own applications. Step Functions orchestrates multi-step Lambda workflows with branching, parallelism, and error handling. Fargate runs containers serverlessly with no EC2 instances to manage. And Aurora Serverless provides a relational database that scales capacity automatically.
+
+The standard serverless API pattern is a client calling API Gateway, which triggers a Lambda function, which reads and writes to DynamoDB, stores files in S3, and queues async work in SQS.
+
+In the next topic, we cover containers on AWS — ECS, EKS, and Fargate — for workloads that need more control than Lambda allows.

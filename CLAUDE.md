@@ -22,7 +22,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 05 | EC2 Fundamentals | `05-ec2-fundamentals.ipynb` | `05-ec2-fundamentals.wav` |
 | 06 | EC2 Advanced — AMIs & Placement Groups | `06-ec2-advanced-amis-placement-groups.ipynb` | `06-ec2-advanced-amis-placement-groups.wav` |
 | 07 | ELB & Auto Scaling | `07-elb-and-auto-scaling.ipynb` | `07-elb-and-auto-scaling.wav` |
-| 08 | Lambda & Serverless | _(planned)_ | `08-lambda-and-serverless.wav` |
+| 08 | Lambda & Serverless | `08-lambda-and-serverless.ipynb` | `08-lambda-and-serverless.wav` |
 | 09 | Containers — ECS, EKS & Fargate | _(planned)_ | `09-containers-ecs-eks-fargate.wav` |
 | 10 | S3 Fundamentals | _(planned)_ | `10-s3-fundamentals.wav` |
 | 11 | S3 Advanced — Replication & Lifecycle | _(planned)_ | `11-s3-advanced-replication-lifecycle.wav` |
