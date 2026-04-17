@@ -1,0 +1,71 @@
+This topic builds on IAM fundamentals and covers the advanced mechanisms that Solutions Architects use to design secure, multi-account AWS environments. We will look at permission boundaries, resource-based policies, AWS STS, cross-account access patterns, and AWS Organizations with Service Control Policies.
+
+Let's start by clarifying the two places a policy can live in AWS.
+
+The first is an identity-based policy — a policy attached to an IAM user, group, or role. It controls what that identity is allowed to do. The second is a resource-based policy — a policy attached directly to an AWS resource, like an S3 bucket policy or an SQS queue policy. It controls who is allowed to access that resource.
+
+The key distinction matters most when you need cross-account access. With identity-based policies, a user in Account A must assume a role in Account B. Account B must trust Account A in the role's trust policy, and Account A must allow the user to call the AssumeRole action. When the user assumes the role, they temporarily become that role and lose their original identity.
+
+With a resource-based policy, you can directly grant Account A's principal access to a resource in Account B — no role assumption needed. The principal keeps their own identity and accesses the resource directly. Both approaches work, but the right choice depends on whether you need the principal to keep their original identity or not.
+
+Now let's look at how AWS evaluates all of these policies together.
+
+When AWS receives an API call, it works through a strict evaluation order. First, it checks for any explicit deny across all policies — if any policy denies the action, the request is rejected immediately, full stop. Second, if AWS Organizations is in use, it checks Service Control Policies. Third, it checks resource-based policies on the target resource. Fourth, it checks any permission boundary set on the principal. Fifth, if temporary credentials were issued by STS, it checks any session policies. Finally, it checks identity-based policies.
+
+The practical rule to remember is this: the effective permissions are the intersection of all applicable policy layers, minus any explicit denies. If any layer does not allow the action, the request is denied.
+
+Next, let's talk about permission boundaries — one of the most important advanced IAM concepts for the exam.
+
+A permission boundary is a policy that sets the maximum permissions an IAM user or role can ever have, regardless of what identity-based policies are attached to it. Think of it as a ceiling. The effective permissions become the intersection of the identity-based policy and the permission boundary.
+
+The most common use case is delegated administration. Imagine you want to allow a developer to create IAM roles for their service — but you do not want them to create roles that are more powerful than their own access. You grant the developer permission to create roles, but with a condition that all new roles must have a specific permission boundary attached. Even if the developer tries to give a role full administrator access, the boundary limits what that role can actually do.
+
+An important thing to remember: permission boundaries do not grant any permissions on their own. They only cap what can be granted by identity-based policies.
+
+Now let's look at IAM policy conditions.
+
+Conditions let you add context-aware restrictions to a policy statement. Instead of simply allowing or denying an action, you can say "allow this action only if the request comes from a specific IP address" or "deny this action unless the user authenticated with MFA."
+
+Some of the most useful condition keys are: aws colon SourceIp, which restricts access to a specific IP range; aws colon RequestedRegion, which limits actions to certain AWS regions; aws colon MultiFactorAuthPresent, which checks whether MFA was used during sign-in; and aws colon PrincipalTag, which checks whether the principal has a specific tag.
+
+A common exam pattern is combining a deny effect with the MultiFactorAuthPresent condition. For example, you can write a policy that denies the S3 DeleteObject action if MFA was not present during authentication. This forces users to re-authenticate with MFA before performing sensitive operations.
+
+Now let's cover AWS STS — the Security Token Service.
+
+STS is the service that actually issues temporary security credentials when a role is assumed. These credentials include an access key ID, a secret access key, a session token, and an expiration time. The credentials are short-lived — anywhere from fifteen minutes to twelve hours — which limits the window of exposure if they are ever leaked.
+
+There are five main STS API calls to know. AssumeRole is the most common — used for cross-account or same-account role assumption. AssumeRoleWithWebIdentity is used for federation with web identity providers like Amazon Cognito, Google, or Facebook. AssumeRoleWithSAML is used for federation with corporate identity providers that support SAML two-point-zero, like Active Directory. GetSessionToken adds MFA support for an existing IAM user session. And GetFederationToken is used when you build a custom identity broker that issues credentials to your own users.
+
+There is one more concept in this area worth knowing: instance profiles. When you attach an IAM role to an EC2 instance, AWS wraps it in something called an instance profile. The EC2 metadata service — reachable at a special internal IP address — automatically vends rotating temporary credentials to any code running on that instance. You never need to hard-code or store access keys on an EC2 instance. The SDK picks up the credentials automatically from the metadata service.
+
+Now let's move on to AWS Organizations.
+
+AWS Organizations is the service that lets you centrally manage multiple AWS accounts under a single umbrella. Picture a tree structure. At the very top is the Root. Below the root you have Organizational Units, or OUs, which are logical containers for accounts. You can nest OUs inside other OUs. Individual AWS accounts live inside OUs.
+
+The account that created the organization is called the Management Account — sometimes referred to as the master account in older documentation. The management account pays all bills for the entire organization. Every other account is a member account.
+
+The main benefits of AWS Organizations are consolidated billing — one invoice covers all accounts, and volume discounts apply across the whole organization — plus centralized policy enforcement via Service Control Policies, the ability to create new accounts programmatically, and the ability to share Reserved Instances and Savings Plans across accounts.
+
+Now the most important feature of Organizations for the Solutions Architect exam: Service Control Policies.
+
+A Service Control Policy, or SCP, is a policy attached to the root, an OU, or a specific account. It defines the maximum permissions available to every principal in that scope — including the root user of member accounts. This is a powerful capability. Even if a member account's administrator tries to grant themselves full access, an SCP applied from above can prevent certain actions entirely.
+
+There are two strategies for using SCPs. The deny-list approach starts with a built-in policy called FullAWSAccess attached at the root, which allows everything by default. You then attach additional SCPs to specific OUs or accounts that explicitly deny what you want to block. This is the most common and most manageable approach.
+
+The allow-list approach removes the FullAWSAccess policy and replaces it with SCPs that explicitly allow only specific actions. This is more restrictive, but significantly harder to maintain as you need to enumerate every permitted action.
+
+There are a few important things SCPs do not do. They do not grant any permissions on their own — an allow in an SCP does not grant access unless IAM also allows it. They do not apply to the management account — that account is always exempt. And they do not affect service-linked roles, which are special roles that AWS services create automatically.
+
+A common SCP pattern you should know for the exam is region restriction. You can write an SCP that denies any action where the requested region is not in your approved list. The trick is to use a NotAction clause to exempt global services like IAM and Organizations themselves, since those services are not region-specific and would break if you blocked them.
+
+Another simple but important SCP is one that prevents member accounts from leaving the organization. This is a single deny statement on the LeaveOrganization action, and it ensures your governance structure cannot be bypassed by an account administrator simply choosing to exit.
+
+Finally, let's briefly cover IAM Access Analyzer.
+
+IAM Access Analyzer continuously monitors resource-based policies across your account to find resources that are unintentionally accessible from outside your AWS account or organization. It analyzes S3 buckets, IAM roles, KMS keys, Lambda functions, SQS queues, and Secrets Manager secrets. When it detects external access, it generates a finding. You can review the finding and either archive it if the access was intentional, or remediate it by tightening the policy.
+
+Access Analyzer also has a policy validation feature that checks policies you write before you deploy them. It flags errors, unused permissions, and anything that does not follow IAM best practices.
+
+To bring it all together — the theme of this topic is control at scale. Permission boundaries let you safely delegate IAM administration. Resource-based policies enable direct cross-account access without role assumption. STS issues short-lived credentials that expire automatically. And AWS Organizations with SCPs lets you enforce governance rules across dozens or hundreds of accounts from a single place.
+
+In the next topic, we move into compute — starting with EC2, the foundational building block for running workloads on AWS.
