@@ -1,0 +1,37 @@
+AWS operates one of the largest and most reliable cloud infrastructures in the world. It is built across physical locations globally, designed for high availability, fault tolerance, and low latency — so your applications can serve users anywhere, reliably.
+
+Let's walk through the building blocks of this infrastructure, starting from the largest unit down to the smallest.
+
+The first concept to understand is a Region. A Region is a physical geographic area that contains AWS data centers. Each region is completely independent — it has its own power, networking, and connectivity. This independence means that a problem in one region has no impact on another.
+
+AWS has over thirty regions worldwide, spread across North America, South America, Europe, the Middle East, Africa, and Asia Pacific. Each region is identified by a code. For example, us-east-1 is US East in Northern Virginia, eu-west-1 is Europe in Ireland, and ap-south-1 is Asia Pacific in Mumbai.
+
+When choosing a region for your application, there are four factors to consider. First is compliance and data residency — some regulations require data to stay within a specific country or region. Second is latency — choose a region closest to your end users for the best performance. Third is service availability — not all AWS services are available in every region, so check before designing your architecture. Fourth is pricing — costs vary slightly between regions.
+
+Now, within each region, AWS divides infrastructure further into Availability Zones.
+
+An Availability Zone, or AZ, is one or more discrete data centers with redundant power, networking, and connectivity. Each region has a minimum of three Availability Zones, and most have between three and six. The AZs within a region are physically separated by a meaningful distance — tens of miles apart — but connected with high-bandwidth, low-latency fiber links.
+
+The key insight here is why Availability Zones exist. By deploying your application across multiple AZs, you protect against a single data center failure. If one AZ goes down, your application keeps running in the others. This is the foundation of high availability on AWS. Any time you see "multi-AZ" in AWS, that is the principle at work.
+
+Beyond regions and Availability Zones, AWS also has Edge Locations.
+
+Edge Locations are AWS data centers deployed in cities around the world — separate from regions — used to deliver content closer to end users with minimal latency. AWS has over four hundred Points of Presence, which includes Edge Locations and Regional Edge Caches, spread across over ninety cities in more than forty countries.
+
+Notice that Edge Locations are not full regions. They do not run services like EC2 or RDS. They are purpose-built for content delivery and DNS. The main services that use Edge Locations are Amazon CloudFront for caching and delivering content, Amazon Route 53 for DNS routing, AWS WAF for filtering traffic at the edge, AWS Shield for distributed denial-of-service protection, and Lambda at Edge for running functions close to users.
+
+For applications that need even lower latency in specific metropolitan areas, AWS offers Local Zones.
+
+A Local Zone is an extension of an AWS Region, placed in a densely populated city that is far from the nearest full region. Local Zones bring select AWS services — such as EC2, EBS, and RDS — physically closer to end users. They are ideal for use cases requiring single-digit millisecond latency, such as live gaming, media production, real-time simulations, and live video streaming. Think of a Local Zone as a mini-region attached to a parent region, without full redundancy.
+
+AWS also has a concept called Wavelength Zones, which go even further in reducing latency.
+
+Wavelength Zones embed AWS compute and storage directly inside telecommunications providers' five-G networks. Traffic from a five-G device never has to leave the telecom network to reach AWS compute — eliminating the round-trip to a full AWS region entirely. Use cases include connected vehicles, smart factories, augmented and virtual reality, and real-time gaming. Wavelength is available with carriers like Verizon, Vodafone, KDDI, and SK Telecom.
+
+Finally, for organisations that cannot move their workloads to the cloud at all, there is AWS Outposts.
+
+AWS Outposts brings AWS infrastructure, services, APIs, and tools directly to your on-premises data center. AWS ships and installs physical rack hardware at your location. You run AWS services locally — using the same APIs and the same console — but the compute happens in your own building. Outposts connects back to the parent AWS region over a private network link. It is designed for use cases where data must stay on-premises due to regulatory requirements, or where applications need ultra-low latency access to local systems.
+
+To put it all together — think of AWS global infrastructure as a set of nested layers. Regions provide geographic isolation. Availability Zones provide fault tolerance within a region. Edge Locations provide performance at the network edge for end users. Local Zones and Wavelength Zones push compute even closer to users in specific scenarios. And Outposts brings the cloud to your own building.
+
+In the next topic, we will dive into IAM — the service that controls who can access all of this infrastructure and what they are allowed to do.

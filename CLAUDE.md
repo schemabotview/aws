@@ -16,8 +16,8 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | # | Topic | Notebook | Audio |
 |---|---|---|---|
 | 01 | What is Cloud Computing | `01-what-is-cloud-computing.ipynb` | `01-what-is-cloud-computing.wav` |
-| 02 | AWS Global Infrastructure | _(planned)_ | `02-aws-global-infrastructure.wav` |
-| 03 | IAM Fundamentals | _(planned)_ | `03-iam-fundamentals.wav` |
+| 02 | AWS Global Infrastructure | `02-aws-global-infrastructure.ipynb` | `02-aws-global-infrastructure.wav` |
+| 03 | IAM Fundamentals | `03-iam-fundamentals.ipynb` | `03-iam-fundamentals.wav` |
 | 04 | IAM Advanced & Organizations | _(planned)_ | `04-iam-advanced-and-organizations.wav` |
 | 05 | EC2 Fundamentals | _(planned)_ | `05-ec2-fundamentals.wav` |
 | 06 | EC2 Advanced — AMIs & Placement Groups | _(planned)_ | `06-ec2-advanced-amis-placement-groups.wav` |

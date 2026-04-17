@@ -1,0 +1,55 @@
+IAM stands for Identity and Access Management. It is the AWS service that controls who can do what in your AWS account.
+
+Every single API call made to AWS — whether from the console, the command-line interface, or an SDK — is authenticated and authorised through IAM. Getting IAM right is not optional. It is the foundation of a secure AWS architecture.
+
+Let's start with the root account, because understanding it shapes how you think about everything else in IAM.
+
+When you first create an AWS account, you get a root user. This identity has unrestricted access to everything in the account — it cannot be limited by any policy. Think of it like the master key to an entire building. It can open every door, disable every alarm, and override every lock. Because of this, the root account should be locked away and almost never used.
+
+There are only a handful of tasks in AWS that require the root account — things like changing the account email address, closing the account entirely, or recovering from a situation where all admin access has been accidentally removed. For everything else, you create and use IAM users. The best practice is to enable multi-factor authentication on the root account, store the credentials somewhere secure, and then leave it alone.
+
+Now let's look at IAM Users.
+
+An IAM user represents a person or an application that needs to interact with AWS. Each user has a unique name within the account. A human user gets a console password to log in through the browser. A programmatic user — like a script or an application — gets an access key ID and a secret access key to authenticate via the command-line interface or SDK.
+
+One important rule: never share IAM credentials between people. If two developers share one IAM user, you lose the ability to audit who did what. CloudTrail records actions by user, so shared credentials make logs meaningless. Create one IAM user per person.
+
+IAM is also a global service — users are not tied to any specific region.
+
+Next up are IAM Groups.
+
+A group is simply a collection of IAM users. The power of groups is that you attach policies to the group rather than to individual users. Every user in that group automatically inherits those permissions. When a new developer joins the team, you add them to the Developers group and they instantly get the right access. When they leave, you remove them from the group and access is gone — no hunting down individual policies.
+
+A few rules to remember about groups: a user can belong to multiple groups, groups cannot contain other groups — there is no nesting — and a user does not have to belong to any group, though that is unusual in practice.
+
+Now let's talk about IAM Policies — the documents that actually define permissions.
+
+A policy is a JSON document. At its core, every policy has one or more statements, and each statement has three key fields: Effect, Action, and Resource.
+
+The Effect is either Allow or Deny. The Action is the specific AWS API operation you are controlling — for example, S3 colon GetObject, or EC2 colon star to mean all EC2 actions. The Resource is the ARN — the Amazon Resource Name — that identifies which specific AWS resource the action applies to. A star for the resource means all resources.
+
+The key insight here is how AWS evaluates multiple policies together. By default, everything is denied — this is called an implicit deny. If a policy explicitly allows an action, access is granted. But if any policy explicitly denies an action, that deny always wins, regardless of what other policies allow. Explicit deny overrides everything. This is important to remember for the exam.
+
+There are three types of policies. AWS Managed policies are pre-built by AWS, covering common use cases like read-only access to S3 or full access to EC2. You cannot edit them. Customer Managed policies are ones you create yourself — they are reusable and can be attached to multiple users, groups, or roles. Inline policies are embedded directly inside a single user, group, or role — they are not reusable and are deleted when the identity is deleted.
+
+Now, one of the most important concepts in IAM for the Solutions Architect exam: Roles.
+
+A role is an IAM identity that has permissions attached to it — but unlike a user, it has no permanent credentials. Instead, when something assumes a role, AWS issues temporary security credentials that expire after a short time.
+
+The most common use case is allowing AWS services to interact with each other. For example, if an EC2 instance needs to read files from S3, you do not give the instance an access key. You create an IAM role with S3 read permissions, and attach that role to the EC2 instance. The instance automatically receives temporary credentials. No secrets stored on disk, no rotation needed.
+
+Roles are also used for cross-account access — allowing users in one AWS account to access resources in another. And for federated identity — allowing external users who authenticate with a corporate directory or a social login to assume a role and access AWS.
+
+Every role has two policies attached to it. The trust policy defines who is allowed to assume the role — for example, the EC2 service. The permissions policy defines what the role can do once assumed. You need both.
+
+Let's briefly cover Multi-Factor Authentication, or MFA.
+
+MFA adds a second layer of protection on top of a password. Even if a password is stolen, the attacker still cannot sign in without the second factor. AWS supports several types of MFA devices — virtual authenticator apps like Google Authenticator or Authy, hardware time-based one-time password tokens, and physical FIDO security keys like a YubiKey. The rule of thumb is simple: enable MFA on the root account, and on any IAM user that has console access, especially administrators.
+
+To close with the core best practices you should know for the exam.
+
+Do not use the root account for daily work. Enable MFA on root and on privileged users. Always grant the least privilege — only the permissions that are actually needed, nothing more. Assign permissions to groups, not to individual users. Use roles for AWS services rather than embedding access keys. Rotate access keys regularly for any programmatic users. And use IAM Access Analyzer to detect unintended resource sharing with external entities.
+
+The key takeaway from this entire topic is that IAM is about two questions: who are you, and what are you allowed to do. Users and roles answer the first question. Policies answer the second.
+
+In the next topic, we will go deeper into IAM — covering advanced features like permission boundaries, service control policies, and how IAM integrates with AWS Organizations.
