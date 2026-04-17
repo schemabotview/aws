@@ -1,0 +1,79 @@
+A VPC, or Virtual Private Cloud, is your own logically isolated network inside AWS. Every resource you deploy — EC2 instances, RDS databases, ECS tasks — lives inside a VPC. Understanding how to design, secure, and connect VPCs is one of the most heavily tested areas of the Solutions Architect exam.
+
+Let's start with the basics.
+
+A VPC gives you your own private IP address space, full control over subnets and route tables and gateways, and security at both the subnet level and the instance level. It is isolated from other AWS customers. A VPC is region-scoped — it spans all Availability Zones in a region. Subnets within the VPC are AZ-scoped.
+
+When you create a VPC you assign an IPv4 CIDR block — for example ten dot zero dot zero dot zero slash sixteen. The allowed range is slash sixteen, which gives you sixty-five thousand five hundred and thirty-six addresses, down to slash twenty-eight, which gives you sixteen. You can add secondary CIDR blocks later if you run out of address space.
+
+Every AWS account comes with a default VPC in every region. It uses the CIDR block one seventy-two dot thirty-one dot zero dot zero slash sixteen, has one public subnet per Availability Zone, has an Internet Gateway already attached, and instances launched into it get a public IP by default. The default VPC is convenient for testing but should not be used for production. Create custom VPCs with intentional design.
+
+Now let's look at subnets.
+
+A subnet is a range of IP addresses within your VPC, confined to a single Availability Zone. The distinction between a public and a private subnet is entirely in the route table — there is no public or private flag on the subnet itself. A public subnet has a route to an Internet Gateway. A private subnet does not.
+
+AWS reserves five IP addresses in every subnet — the first four and the last one. For a slash twenty-four subnet that means two hundred and fifty-one usable addresses, not two hundred and fifty-six. The reserved addresses are: the network address, the VPC router, the DNS server, a future-use address, and the broadcast address. This is an exam favourite — if you are asked how many usable addresses fit in a slash twenty-seven subnet, the answer is thirty-two total minus five reserved, giving you twenty-seven.
+
+A typical three-tier architecture spreads subnets across two or three Availability Zones. The public subnets hold the load balancers and NAT Gateways. The first private tier holds the application servers. The second private tier holds the databases. Each tier has one subnet per Availability Zone.
+
+Now let's cover the Internet Gateway and route tables.
+
+An Internet Gateway is a horizontally scaled, redundant VPC component that allows traffic between your VPC and the public internet. You can attach only one Internet Gateway per VPC. The gateway also performs NAT for public IP addresses — it translates the instance's private IP to its public IP on outbound traffic and back on inbound traffic.
+
+For an instance to be reachable from the internet it needs three things: a public IP or Elastic IP, a route to the Internet Gateway in its subnet's route table, and a security group rule allowing the inbound traffic. All three must be present.
+
+Route tables decide where traffic goes based on the destination CIDR. Every subnet is associated with a route table. Every route table has a local route for the VPC CIDR that cannot be deleted — it ensures all VPC-internal traffic stays internal. A public subnet's route table adds a default route of zero dot zero dot zero dot zero slash zero pointing to the Internet Gateway. A private subnet's route table adds the same default route pointing to a NAT Gateway instead. When multiple routes match, the most specific prefix wins.
+
+Now let's talk about NAT Gateways.
+
+A NAT Gateway allows instances in private subnets to initiate outbound connections to the internet — for software updates, API calls, and so on — without being directly reachable from the internet. Traffic flows from the private instance to the NAT Gateway in the public subnet, which translates the private IP to its own Elastic IP and sends the packet to the Internet Gateway.
+
+NAT Gateways are fully managed by AWS — no patching, no maintenance. They are AZ-scoped, so you deploy one per Availability Zone for high availability. Each requires an Elastic IP and must be placed in a public subnet. They support up to one hundred gigabits per second of bandwidth and scale automatically.
+
+The high-availability pattern is straightforward: if you use a single NAT Gateway in one AZ and that AZ becomes unavailable, private instances in all other AZs lose internet access. To avoid this, deploy one NAT Gateway per AZ and point each AZ's private route table at the local NAT Gateway.
+
+The alternative — NAT Instances — are legacy EC2 instances you run yourself. They require manual maintenance, manual high-availability configuration, and are limited by instance type bandwidth. Always prefer NAT Gateway for new deployments.
+
+Now let's cover security groups.
+
+Security groups are instance-level virtual firewalls — more precisely, they are attached to elastic network interfaces. They are stateful: if you allow inbound traffic on port eighty, the return traffic is automatically allowed without any explicit outbound rule. Security groups only support allow rules — you cannot write a deny rule. Multiple security groups can be attached to one instance.
+
+A powerful feature of security groups is referencing. Instead of specifying an IP range, you can reference another security group. For example, your application server's security group can allow inbound traffic on port eighty-eighty from the load balancer security group. This is more maintainable than hard-coded IPs and automatically adjusts as instances scale in and out.
+
+The default security group allows all inbound traffic from instances in the same security group and all outbound traffic. For custom security groups, all inbound traffic is denied by default until you add allow rules.
+
+Now let's cover Network ACLs.
+
+Network ACLs operate at the subnet level. Unlike security groups, they are stateless — return traffic is not automatically allowed, so you must write explicit rules for both inbound and outbound directions. They support both allow and deny rules. Rules are evaluated in ascending rule number order and the first matching rule wins.
+
+The default Network ACL that comes with every VPC allows all inbound and all outbound traffic. A custom Network ACL denies everything until you add rules.
+
+One important detail is ephemeral ports. When an instance responds to an inbound request, the response is sent from a high-numbered ephemeral port — typically in the range one thousand and twenty-four to sixty-five thousand five hundred and thirty-five on Linux. Because Network ACLs are stateless, you must allow outbound traffic on this port range in addition to allowing the inbound request. Forgetting ephemeral ports is the most common Network ACL misconfiguration.
+
+The key comparison: security groups are stateful and apply to instances, Network ACLs are stateless and apply to subnets. Security groups have allow rules only; Network ACLs can also deny. For blocking specific IPs, use a Network ACL — you cannot deny in a security group.
+
+Now let's look at VPC Flow Logs.
+
+Flow Logs capture metadata about IP traffic flowing through your VPC — not the packet contents, just the headers: source and destination IP, port, protocol, number of bytes and packets, and whether the traffic was accepted or rejected. You can enable flow logs at the VPC level, the subnet level, or the individual network interface level.
+
+Traffic captured by flow logs can be sent to three destinations: S3 for long-term storage and querying with Athena, CloudWatch Logs for real-time monitoring and alerting, and Kinesis Data Firehose for streaming to third-party security tools.
+
+Flow logs are commonly used to diagnose why traffic is being rejected — you can see whether it was a security group or a Network ACL that blocked the connection — and to audit access patterns or detect unusual traffic like port scanning.
+
+Flow logs do not capture traffic to the EC2 instance metadata service at one sixty-nine dot two fifty-four dot one sixty-nine dot two fifty-four, DHCP traffic, DNS queries to the VPC resolver, or traffic to the VPC router.
+
+Let's briefly cover bastion hosts.
+
+A bastion host is a small EC2 instance in a public subnet that you SSH into first, then use as a jump point to reach private instances. The security group on the bastion should restrict inbound SSH to your specific IP address — not the entire internet. Use SSH agent forwarding so your private key never needs to be copied onto the bastion.
+
+For production environments, consider replacing bastions with AWS Systems Manager Session Manager, which provides shell access through the SSM agent without requiring any open inbound ports or SSH keys. All sessions are logged in CloudTrail.
+
+Let's also cover Elastic IPs.
+
+An Elastic IP is a static public IPv4 address that you own in your account. Unlike the regular public IP assigned at launch — which is released when the instance stops — an Elastic IP persists across stop and start cycles. You can remap it from one instance to another in seconds, which is useful for fault tolerance scenarios. Elastic IPs are free while associated with a running instance but are charged a small hourly fee when allocated but not associated, to discourage waste. The default limit is five per region.
+
+Finally, DNS settings.
+
+Two VPC settings control DNS behavior. enableDnsSupport, which is on by default, enables the VPC DNS resolver. enableDnsHostnames, which is off by default in custom VPCs, assigns public DNS hostnames to instances with public IP addresses. Both settings must be enabled for Route 53 private hosted zones to resolve inside the VPC. If you create a custom VPC and want internal DNS to work, enable both.
+
+In the next topic, we go deeper into VPC connectivity — peering, Transit Gateway, VPN connections, Direct Connect, and PrivateLink.

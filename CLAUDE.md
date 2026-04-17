@@ -28,7 +28,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 11 | S3 Advanced — Replication & Lifecycle | `11-s3-advanced-replication-lifecycle.ipynb` | `11-s3-advanced-replication-lifecycle.wav` |
 | 12 | EBS & Instance Store | `12-ebs-and-instance-store.ipynb` | `12-ebs-and-instance-store.wav` |
 | 13 | EFS, FSx & Storage Gateway | `13-efs-fsx-and-storage-gateway.ipynb` | `13-efs-fsx-and-storage-gateway.wav` |
-| 14 | VPC Fundamentals | _(planned)_ | `14-vpc-fundamentals.wav` |
+| 14 | VPC Fundamentals | `14-vpc-fundamentals.ipynb` | `14-vpc-fundamentals.wav` |
 | 15 | VPC Advanced — Peering & PrivateLink | _(planned)_ | `15-vpc-advanced-peering-privatelink.wav` |
 | 16 | Route 53 | _(planned)_ | `16-route-53.wav` |
 | 17 | CloudFront & Global Accelerator | _(planned)_ | `17-cloudfront-and-global-accelerator.wav` |
