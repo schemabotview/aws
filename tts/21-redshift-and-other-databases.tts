@@ -1,0 +1,51 @@
+Beyond RDS, Aurora, DynamoDB, and ElastiCache, AWS offers a suite of purpose-built databases — each optimised for a specific data model or access pattern. This topic covers Redshift for data warehousing, and the specialised database services: DocumentDB, Neptune, Keyspaces, QLDB, Timestream, and MemoryDB. The Solutions Architect exam tests your ability to select the right database for a given scenario.
+
+Let's start with Amazon Redshift.
+
+Redshift is AWS's fully managed data warehouse, optimised for OLAP — Online Analytical Processing — which means complex queries over large datasets, aggregations, and business intelligence workloads. This is fundamentally different from OLTP databases like RDS or Aurora, which are optimised for many small transactions at the row level.
+
+The distinction is important. An OLTP workload is your application inserting orders, updating user records, and doing fast point lookups on individual rows. An OLAP workload is an analyst running a query that scans millions of rows to calculate total revenue by month across a petabyte-scale dataset. The same database engine cannot do both efficiently.
+
+The key technology behind Redshift's analytical performance is columnar storage. In a traditional row store, data for each row is stored together on disk. When you run a query like "sum the revenue column across all orders", the database still reads every column of every row — most of which you don't need. In a columnar store, each column is stored separately. The same query reads only the revenue column and skips everything else. For analytical queries that touch a few columns across hundreds of millions of rows, columnar storage reduces disk I/O by ten to one hundred times.
+
+Now let's look at Redshift's architecture.
+
+A Redshift cluster has two types of nodes. The leader node receives queries from clients, parses them, builds an execution plan, and coordinates the compute nodes. The compute nodes execute query fragments in parallel and store data on their local disks. This design is called MPP — Massively Parallel Processing. The leader distributes work across all compute nodes simultaneously, and the results are combined and returned.
+
+For node types, Redshift offers RA3 and DC2. RA3 nodes use managed storage backed by S3, which means you can scale compute and storage independently. If you need more compute power, you add nodes without paying for more storage, and vice versa. RA3 is the recommended choice for most new workloads. DC2 nodes use local SSDs fixed to the node — they are better suited to smaller, compute-intensive datasets where all data is accessed frequently.
+
+Redshift Serverless removes the need to manage a cluster entirely. Redshift automatically scales compute based on your workload, and you pay per Redshift Processing Unit hour. It is ideal for intermittent analytics, development and test environments, and workloads with unpredictable or variable demand.
+
+For loading data, the most efficient method is the COPY command. It loads data in parallel from S3, reading multiple files simultaneously across compute node slices. It supports CSV, JSON, Parquet, ORC, and Avro formats. For bulk loading, COPY is far faster than issuing individual INSERT statements.
+
+Redshift Spectrum extends Redshift to query data directly in S3 without loading it into the cluster first. You define external tables in the AWS Glue Data Catalog, and Redshift uses thousands of Spectrum nodes to process the S3 data in parallel. You pay per terabyte scanned. This enables a combined data lake and data warehouse architecture — hot, frequently queried data loaded into Redshift, and cold or raw data queried in place from S3.
+
+For durability, Redshift takes automated snapshots every eight hours or every five gigabytes of data changes, with a retention period of one to thirty-five days. Manual snapshots persist until you delete them. Snapshots are stored in S3 and can be copied to another region for disaster recovery. Restoring a snapshot creates a new cluster.
+
+Enhanced VPC Routing forces all COPY and UNLOAD traffic between Redshift and S3 to route through your VPC rather than the public internet. This is required in compliance scenarios where data must not leave your private network.
+
+Now let's cover the purpose-built database services.
+
+Amazon DocumentDB is AWS's managed document database, compatible with MongoDB drivers and tools. It stores JSON documents and supports the MongoDB query language. Its storage architecture mirrors Aurora — data is replicated six ways across three Availability Zones, auto-heals from failures, and automatically grows to one hundred and twenty-eight terabytes. Use DocumentDB when you are migrating an existing MongoDB workload to AWS, or when your data is naturally document-shaped with variable or nested attributes. For the exam, the signal is "MongoDB-compatible" or "document database".
+
+Amazon Neptune is AWS's fully managed graph database. Graph databases model data as nodes — entities — and edges — relationships between entities. They are optimised for traversing complex, highly connected data. Neptune supports the Gremlin query language from Apache TinkerPop, SPARQL for RDF data, and openCypher. Its storage is Aurora-style with six copies across three Availability Zones and up to sixty-four terabytes.
+
+The use cases for Neptune are distinctive. Social networks — finding mutual connections, friend-of-friend traversals. Fraud detection — linking accounts, devices, and IP addresses to identify suspicious patterns. Knowledge graphs — interconnected facts and relationships. Recommendation engines — "users who bought this also bought that". IT topology mapping — tracking infrastructure dependencies. When the exam scenario mentions any of these, the answer is Neptune.
+
+Amazon Keyspaces is a serverless, fully managed database compatible with Apache Cassandra. It supports the Cassandra Query Language and existing Cassandra drivers, so migrating a Cassandra workload requires no code rewrite. Keyspaces is serverless — tables scale automatically, and you pay per request or for provisioned throughput. Data is replicated three times across multiple Availability Zones. When the exam says "Cassandra-compatible" or "migrate Cassandra to AWS", the answer is Keyspaces.
+
+Amazon QLDB — Quantum Ledger Database — is a fully managed ledger database with a cryptographically verifiable, immutable transaction log. Every change to data is recorded in an append-only journal that can never be altered or deleted. Each transaction is cryptographically hashed, so you can mathematically prove that no record has been tampered with. QLDB uses PartiQL, a SQL-compatible query language.
+
+QLDB is the right choice when you need a trusted, tamper-evident audit trail — financial transaction history, supply chain provenance, healthcare records. The key distinction from blockchain is that QLDB is centralised — AWS manages it, and there is a single trusted authority. If the scenario requires decentralised, multi-party trust where no single party controls the ledger, the answer is AWS Managed Blockchain instead.
+
+Amazon Timestream is a fully managed time-series database optimised for storing and querying data points indexed by time. It automatically tiers data — recent data stays in memory for fast access, and older data moves to magnetic storage. Timestream is one thousand times faster and one-tenth the cost of a relational database for time-series workloads. It includes built-in time-series analytics functions for smoothing, interpolation, and approximation. Use Timestream for IoT sensor data, application metrics, DevOps monitoring telemetry, and financial tick data — any dataset where time is the primary dimension.
+
+Amazon MemoryDB for Redis is a durable, Redis-compatible in-memory database designed to be used as a primary database, not just a cache. The critical difference from ElastiCache for Redis is durability. ElastiCache is a cache layer in front of another database — it can optionally persist data but data loss is acceptable. MemoryDB uses a Multi-AZ transaction log to ensure every write is durable before acknowledging it. No data is ever lost on node failure.
+
+The trade-off is write latency — MemoryDB writes take single-digit milliseconds because each write must be committed to the transaction log. Reads are still microseconds. Use MemoryDB when your microservices need the Redis API, microsecond read latency, and full durability without maintaining a separate primary database behind the cache. For pure caching — accelerating DynamoDB or RDS — use ElastiCache.
+
+Let's close with the exam selection pattern.
+
+When you see "relational, MySQL or PostgreSQL, high performance" — Aurora. "Relational, Oracle or SQL Server" — RDS. "NoSQL key-value or document at serverless scale" — DynamoDB. "In-memory cache, microsecond reads" — ElastiCache Redis. "Durable Redis as a primary database" — MemoryDB. "Data warehouse, OLAP, business intelligence, petabyte scale" — Redshift. "Query S3 data lake with SQL" — Redshift Spectrum or Athena. "MongoDB-compatible documents" — DocumentDB. "Graph — social network, fraud, recommendations" — Neptune. "Cassandra-compatible" — Keyspaces. "Immutable audit trail, financial ledger" — QLDB. "Decentralised multi-party ledger" — Managed Blockchain. "Time-series, IoT, sensor data, metrics" — Timestream.
+
+In the next topic, we cover SQS and SNS — the messaging and notification services at the core of decoupled, event-driven architectures on AWS.

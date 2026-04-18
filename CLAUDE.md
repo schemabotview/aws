@@ -35,7 +35,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 18 | RDS & Aurora | `18-rds-and-aurora.ipynb` | `18-rds-and-aurora.wav` |
 | 19 | DynamoDB | `19-dynamodb.ipynb` | `19-dynamodb.wav` |
 | 20 | ElastiCache | `20-elasticache.ipynb` | `20-elasticache.wav` |
-| 21 | Redshift & Other Databases | _(planned)_ | `21-redshift-and-other-databases.wav` |
+| 21 | Redshift & Other Databases | `21-redshift-and-other-databases.ipynb` | `21-redshift-and-other-databases.wav` |
 | 22 | SQS & SNS | _(planned)_ | `22-sqs-and-sns.wav` |
 | 23 | Kinesis & MSK | _(planned)_ | `23-kinesis-and-msk.wav` |
 | 24 | Step Functions & EventBridge | _(planned)_ | `24-step-functions-and-eventbridge.wav` |
