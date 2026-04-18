@@ -1,0 +1,67 @@
+Route 53 is AWS's managed DNS service. It translates domain names into IP addresses, routes traffic intelligently across regions and endpoints, and monitors the health of your resources. It is one of the most heavily tested networking services on the Solutions Architect exam, particularly the routing policies and health check integration.
+
+Let's start with a quick DNS refresher.
+
+When a browser wants to reach a hostname like api dot example dot com, it asks a recursive resolver — typically provided by your ISP or a public resolver like eight dot eight dot eight dot eight. The resolver works up the DNS hierarchy: first the root, then the dot com TLD servers, then the name servers for example dot com. Route 53 acts as those authoritative name servers and responds with the IP address. The resolver caches that answer for the TTL — the time to live — before asking again.
+
+TTL is an important design decision. A lower TTL means DNS changes propagate faster — useful for failover scenarios — but it means more queries hit Route 53, which costs money. A higher TTL reduces query volume but slows down how quickly changes take effect.
+
+The key DNS record types to know are: A records map a hostname to an IPv4 address. AAAA records map to IPv6. CNAME maps one hostname to another hostname. NS records identify the authoritative name servers for a domain. MX records handle email routing. TXT records carry arbitrary text, used for domain verification and SPF email policies.
+
+One important CNAME limitation: you cannot use a CNAME at the zone apex — the root domain itself. For example, you can create a CNAME for www dot example dot com, but not for example dot com directly. This is where Alias records come in.
+
+Now let's cover hosted zones.
+
+A hosted zone is a container for DNS records for a domain. A public hosted zone answers queries from the public internet — used for any externally accessible domain. A private hosted zone answers queries only from within one or more VPCs — used for internal service discovery where internal hostnames resolve to private IP addresses. Both cost fifty cents per month. For private hosted zones to work, the associated VPC must have both DNS support and DNS hostnames enabled.
+
+Now let's talk about Alias records.
+
+An Alias record is a Route 53 extension that maps a hostname directly to an AWS resource. It solves the CNAME zone apex problem — you can create an Alias record for example dot com itself, pointing directly to an Application Load Balancer or a CloudFront distribution. CNAME records cannot do this.
+
+There are two other advantages of Alias records over CNAMEs. First, Alias record queries are free — Route 53 does not charge for DNS queries that resolve to Alias targets. Second, the TTL is managed by AWS automatically. Valid Alias targets include load balancers of all types, CloudFront distributions, API Gateway endpoints, S3 static website endpoints, Elastic Beanstalk environments, and other Route 53 records in the same hosted zone. You cannot create an Alias pointing to an EC2 DNS name or an RDS endpoint — those require a CNAME.
+
+Now let's go through the routing policies. This is the most exam-intensive section.
+
+Simple routing returns a single resource. If you specify multiple values, the client receives all of them and picks one randomly. Simple routing does not support health checks. Use it when you have a single resource and no failover requirement.
+
+Weighted routing splits traffic across multiple resources according to assigned weights. A weight of seventy and a weight of thirty gives a seventy-thirty split. Setting a weight to zero stops traffic to that resource. Weighted routing supports health checks — unhealthy targets are automatically excluded. The primary use case is A/B testing, blue-green deployments, and canary releases where you want to gradually shift a small percentage of traffic to a new version before going fully live.
+
+Latency-based routing sends each user to the AWS region that provides the lowest network latency for them. It is important to understand that this is based on measured latency, not on geographic proximity. A user in Europe might be routed to us-east-1 if the latency measurement happens to be lower. Use latency routing for multi-region active-active deployments where you want the fastest response time for global users.
+
+Failover routing implements an active-passive pattern. You designate one record as primary and one as secondary. Route 53 continuously monitors the primary via a health check. When the primary becomes unhealthy, all traffic automatically shifts to the secondary. When the primary recovers, traffic shifts back. Use failover routing for disaster recovery scenarios with a hot standby in another region.
+
+Geolocation routing sends traffic based on the geographic location of the user — their country or continent, or even US state. Unlike latency routing, this is strictly about location, not performance. You must create a default record to handle users whose location does not match any rule. Use geolocation routing for data residency compliance — for example, keeping European user data within European infrastructure — or for serving localised content in different languages.
+
+Geoproximity routing also uses location, but adds a bias that lets you expand or shrink the geographic area covered by each endpoint. A positive bias expands coverage, attracting more traffic. A negative bias shrinks coverage. This is useful for gradually shifting traffic from one region to another without a hard cutover. Geoproximity requires Route 53 Traffic Flow, which is a visual policy editor.
+
+IP-based routing sends traffic based on the client's IP address. You define CIDR ranges and map each range to an endpoint. This is useful for routing known corporate office IP ranges to an internal endpoint, or for ISP-level optimisation.
+
+Multi-value routing returns up to eight randomly chosen records, but unlike Simple routing it supports health checks. Only healthy records are returned. It provides basic client-side load balancing with health awareness. It is not a replacement for a load balancer — it operates purely at the DNS layer — but it is a lightweight option for distributing traffic across a small number of servers.
+
+Now let's cover health checks.
+
+Route 53 health checkers are distributed globally across many locations. By default, a resource is considered unhealthy when three or more checkers agree it is failing. Health checks come in three types.
+
+Endpoint health checks probe a specific IP address or hostname via HTTP, HTTPS, or TCP. The check passes if the endpoint responds with a two-xx or three-xx status code within four seconds. You can optionally require the response body to contain a specific string, checked against the first five thousand one hundred and twenty bytes.
+
+Calculated health checks combine multiple child health checks using AND, OR, or NOT logic. This lets you create a composite health check that represents the overall health of a multi-component system.
+
+CloudWatch alarm health checks monitor the state of a CloudWatch alarm rather than probing an endpoint directly. This is the solution for monitoring private resources inside a VPC, because Route 53 health checkers are on the public internet and cannot reach private IP addresses. You create a CloudWatch metric for the private resource, set up an alarm on that metric, then create a Route 53 health check that monitors the alarm state.
+
+Health checks run every thirty seconds by default. You can reduce this to ten seconds for faster detection, at higher cost. The failure threshold — how many consecutive failures trigger an unhealthy status — defaults to three.
+
+Now let's cover domain registration.
+
+Route 53 is also a domain registrar. You can register new domains directly through it, starting at around thirteen dollars per year for common TLDs. When you register or transfer a domain through Route 53, it automatically creates a public hosted zone and sets the name server records at the registrar. If your domain is registered with a third-party registrar like GoDaddy or Namecheap, you can still use Route 53 for DNS by taking the four NS records from your Route 53 hosted zone and entering them as the name servers at your registrar.
+
+Finally, let's cover Route 53 Resolver.
+
+Every VPC has a built-in DNS resolver — the Route 53 Resolver — accessible at the VPC's base CIDR plus two. In hybrid environments where you have both a VPC and an on-premises network, you often need DNS queries to flow in both directions.
+
+Inbound Resolver Endpoints allow on-premises servers to resolve AWS private hosted zone names. The on-premises DNS server forwards queries to the inbound endpoint, which is an ENI inside your VPC, and the Route 53 Resolver responds with the private IP.
+
+Outbound Resolver Endpoints allow EC2 instances to resolve on-premises hostnames. You create forwarding rules that say: any query for a domain like office dot corp should be forwarded to the on-premises DNS server at a specific IP. The Route 53 Resolver forwards the query through the outbound endpoint to your on-premises DNS.
+
+Both endpoint types are backed by ENIs in your VPC subnets and flow over your Direct Connect or VPN connection for hybrid connectivity.
+
+In the next topic, we cover CloudFront and Global Accelerator — AWS's content delivery and global networking acceleration services.

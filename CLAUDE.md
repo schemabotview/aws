@@ -30,7 +30,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 13 | EFS, FSx & Storage Gateway | `13-efs-fsx-and-storage-gateway.ipynb` | `13-efs-fsx-and-storage-gateway.wav` |
 | 14 | VPC Fundamentals | `14-vpc-fundamentals.ipynb` | `14-vpc-fundamentals.wav` |
 | 15 | VPC Advanced — Peering & PrivateLink | `15-vpc-advanced-peering-privatelink.ipynb` | `15-vpc-advanced-peering-privatelink.wav` |
-| 16 | Route 53 | _(planned)_ | `16-route-53.wav` |
+| 16 | Route 53 | `16-route-53.ipynb` | `16-route-53.wav` |
 | 17 | CloudFront & Global Accelerator | _(planned)_ | `17-cloudfront-and-global-accelerator.wav` |
 | 18 | RDS & Aurora | _(planned)_ | `18-rds-and-aurora.wav` |
 | 19 | DynamoDB | _(planned)_ | `19-dynamodb.wav` |
