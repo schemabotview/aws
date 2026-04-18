@@ -1,0 +1,81 @@
+RDS, or Relational Database Service, is AWS's managed service for running relational databases without managing the underlying infrastructure. Aurora is AWS's cloud-native relational engine — MySQL and PostgreSQL compatible but built from scratch for higher performance, availability, and scale. Together they cover virtually every relational database need on AWS and are heavily tested on the Solutions Architect exam.
+
+Let's start with what RDS manages for you.
+
+RDS handles OS patching, database engine upgrades, automated backups, storage provisioning, and hardware replacement. You focus on schema design and queries. The supported engines are MySQL, PostgreSQL, MariaDB, Oracle, Microsoft SQL Server, and IBM Db2.
+
+The trade-off versus running a database engine on EC2 is control versus convenience. With RDS you get automated backups, Multi-AZ failover with one checkbox, and read replicas built in — but you have no SSH access to the underlying OS. Use EC2 only when you need OS-level access for a feature RDS does not support, such as Oracle RAC.
+
+For storage, RDS uses EBS volumes. gp3 is the recommended default — it lets you provision IOPS and throughput independently of volume size. io1 is for workloads needing more than sixty-four thousand IOPS. You can also enable RDS Storage Autoscaling, which automatically increases storage when free space runs low, with no downtime and no manual intervention.
+
+Now let's cover backups.
+
+RDS automated backups are enabled by default. RDS takes a daily full backup during the maintenance window and captures transaction logs every five minutes. This enables point-in-time restore — you can restore to any second within the retention window, which you set between one and thirty-five days. Backups are stored in S3 managed by AWS.
+
+Manual snapshots are triggered by you. Unlike automated backups, they persist indefinitely — they are not deleted when the DB instance is deleted. You can copy them to another region for disaster recovery or share them with another AWS account.
+
+An important behaviour to understand: restoring from either a backup or a snapshot always creates a new RDS instance. It never overwrites the existing one. Your application then needs to update its connection string to point to the restored instance.
+
+Now let's cover Multi-AZ deployments.
+
+Multi-AZ creates a synchronous standby replica in a different Availability Zone. Every write to the primary is synchronously replicated to the standby before the write is acknowledged. The standby receives no read traffic — it exists solely for availability.
+
+When the primary fails, AWS detects the failure, updates the DNS record for the DB endpoint to point to the standby, and promotes it to primary. This typically completes in one to two minutes. Because your application connects using the same DNS endpoint throughout, no connection string change is required after failover.
+
+Multi-AZ is a single-region feature focused purely on availability. If you need cross-region high availability, you use Aurora Global Database or promote a cross-region read replica.
+
+Now let's look at read replicas.
+
+Read replicas use asynchronous replication to copy data from the primary to one or more replica instances. Your application directs read queries to replica endpoints, offloading the primary for writes only. You can have up to five read replicas per RDS instance.
+
+Replicas can be in the same Availability Zone, a different AZ in the same region, or an entirely different region. Asynchronous replication means replicas may have a small lag — reads might return slightly stale data. Cross-region replication incurs data transfer charges; same-region replication is free.
+
+Read replicas can be promoted to standalone database instances. This breaks replication and is used for migrations, disaster recovery testing, or splitting a database into independent instances.
+
+The exam distinction to keep sharp: Multi-AZ is for availability — synchronous, no reads, automatic failover. Read Replicas are for scalability — asynchronous, serves reads, manual promotion. They solve different problems.
+
+Now let's cover security.
+
+RDS instances should be deployed in private VPC subnets. Security groups restrict which application tiers can connect. Encryption at rest uses AES-256 via KMS and must be enabled at creation — you cannot add it later to an existing instance. To encrypt an unencrypted instance, take a snapshot, copy the snapshot with encryption enabled, and restore from the encrypted copy.
+
+For authentication, RDS supports IAM database authentication on MySQL and PostgreSQL. Instead of a password, your application requests a short-lived authentication token from IAM — valid for fifteen minutes — and uses it to connect. This eliminates passwords from your application configuration and integrates cleanly with IAM roles on EC2 instances and Lambda functions.
+
+For credential management, Secrets Manager can store and automatically rotate your database password on a schedule.
+
+Now let's cover RDS Proxy.
+
+RDS Proxy sits between your application and the database and maintains a pool of persistent connections to the database. Your application connects to the proxy, and the proxy multiplexes those connections into a smaller number of long-lived database connections.
+
+This is critical for serverless architectures. Lambda functions are ephemeral — each invocation opens a new database connection. At scale, thousands of concurrent Lambda invocations can exhaust the database's connection limit. RDS Proxy absorbs those connections and reduces the load on the database by up to sixty-six percent.
+
+RDS Proxy also improves failover. When a Multi-AZ failover occurs, RDS Proxy detects the new primary and reconnects automatically — your application connections to the proxy are preserved. RDS Proxy enforces IAM authentication and TLS, and it is only accessible from within your VPC.
+
+The exam rule is simple: Lambda plus RDS always means RDS Proxy in between.
+
+Now let's move to Aurora.
+
+Aurora is AWS's cloud-native relational database engine. It is wire-compatible with MySQL and PostgreSQL — your existing drivers and tools work without changes — but the storage and replication layer is completely reimplemented. Aurora is five times faster than standard MySQL on RDS and three times faster than standard PostgreSQL on RDS.
+
+The key architectural difference is that Aurora separates compute from storage. The storage layer is a distributed cluster volume that maintains six copies of your data across three Availability Zones — two copies per AZ. Writes require four out of six copies to acknowledge. Reads require three. Aurora continuously scans for corrupted blocks and repairs them using other copies — this is called self-healing storage.
+
+Because all compute instances share the same underlying storage volume, adding a read replica does not require copying data. The replica simply starts reading from the shared volume. This is why Aurora supports up to fifteen read replicas compared to five for standard RDS, and why Aurora's replication has almost no lag — there are no binary logs being shipped between instances.
+
+Aurora storage automatically grows in ten-gigabyte increments up to one hundred and twenty-eight terabytes. You are billed per gigabyte actually used, not pre-provisioned.
+
+Aurora failover is faster than RDS Multi-AZ. Because there is no storage rebuild needed, promoting a read replica to primary typically takes under thirty seconds.
+
+Aurora exposes four endpoint types. The cluster endpoint always points to the current primary writer — use this for all write traffic. The reader endpoint load balances across all available read replicas — use this for read traffic. Custom endpoints point to a subset of instances you define — useful for directing heavy analytical queries to larger replica instances. Instance endpoints connect to a specific instance for debugging or maintenance.
+
+Now let's cover Aurora's advanced features.
+
+Aurora Serverless version two automatically scales compute capacity up and down in fine-grained increments — as small as half an Aurora Capacity Unit — based on actual workload. It scales within seconds without dropping connections. You set a minimum and maximum capacity range. This is ideal for variable or unpredictable workloads, development and test environments, and new applications where you do not know the scale in advance.
+
+Aurora Global Database spans multiple AWS regions with a single cluster. A primary region handles all writes. Up to five secondary regions receive replicated data with a replication lag of under one second — this is storage-level replication, not binary log shipping. If the primary region becomes unavailable, you can promote a secondary region to primary in under one minute. The recovery point objective is under one second and the recovery time objective is under one minute. This makes Aurora Global Database the go-to choice for globally distributed applications with strict disaster recovery requirements.
+
+Aurora Backtrack lets you rewind an Aurora MySQL database to a previous point in time without restoring from a snapshot. The backtrack window can be up to seventy-two hours. Rewinding takes seconds — far faster than a full restore. Use it when you accidentally delete data or run a bad migration and need to undo changes quickly.
+
+Aurora Multi-Master allows all instances in a cluster to accept write traffic. If one writer fails, others continue serving writes immediately. This provides continuous write availability for applications that cannot tolerate even the brief failover window of a standard Aurora cluster.
+
+For the exam, the high-level decision is: choose RDS when you need Oracle or SQL Server, since Aurora does not support those engines. Choose Aurora for MySQL or PostgreSQL workloads where you want better performance and availability. Choose Aurora Serverless version two for variable or unpredictable workloads. Choose Aurora Global Database when you need cross-region disaster recovery with under one second RPO. When Lambda connects to any relational database, always put RDS Proxy in between.
+
+In the next topic, we cover DynamoDB — AWS's fully managed NoSQL database.
