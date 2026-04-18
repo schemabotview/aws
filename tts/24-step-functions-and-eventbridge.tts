@@ -1,0 +1,51 @@
+Step Functions and EventBridge are AWS's orchestration and event routing services. Step Functions coordinates multi-step workflows — sequencing Lambda functions, AWS services, and human approvals into reliable state machines. EventBridge is a serverless event bus that routes events from AWS services, SaaS applications, and custom sources to targets based on rules. Together they are the backbone of event-driven and workflow-driven serverless architectures on AWS.
+
+Let's start with Step Functions and why it exists.
+
+Without Step Functions, multi-step workflows are typically implemented by chaining Lambda functions — Lambda A calls Lambda B calls Lambda C. The problems with this approach are significant. There is no visibility into which step failed or where execution currently is. Retry logic must be written in every function. Error handling is scattered and inconsistent. And long-running workflows hit Lambda's fifteen-minute timeout.
+
+Step Functions solves this by moving orchestration logic out of application code and into a managed state machine. Instead of functions calling each other directly, a state machine defines each step, the transitions between steps, the retry behaviour on failure, and what to do when an error cannot be recovered from. You gain full visibility into every execution in the console, and the workflow can run for up to a year.
+
+Now let's look at the building blocks of a state machine.
+
+A Step Functions state machine is defined in Amazon States Language — a JSON document describing states and transitions. There are eight state types. A Task state invokes a Lambda function, calls an AWS service API directly, or runs an ECS task — it does work. A Choice state branches based on input data, like an if/else. A Wait state pauses execution for a fixed duration or until a specific timestamp. A Parallel state runs multiple branches simultaneously and waits for all of them to complete before moving on. A Map state iterates over an array and applies a sub-workflow to each element in parallel. A Pass state passes input to output unchanged and is useful for injecting static data. A Succeed state ends execution successfully, and a Fail state ends execution with an error.
+
+Now let's cover the two workflow types.
+
+Standard workflows support executions lasting up to one year. Each state executes exactly once. Pricing is per state transition. The full execution history is stored in Step Functions and is viewable in the console — making Standard workflows ideal for auditable business processes like order fulfilment, data pipelines, and human-in-the-loop approvals.
+
+Express workflows are designed for high-throughput, short-duration processing — up to five minutes per execution. They support over one hundred thousand executions per second. Pricing is per execution duration and number of requests. Execution history goes to CloudWatch Logs rather than the Step Functions console. Use Express workflows for IoT event processing, high-volume microservice orchestration, and short-lived automation tasks.
+
+Now let's cover error handling.
+
+Step Functions has built-in retry and catch logic at the state level. The Retry configuration specifies which errors to retry, how long to wait before the first retry, the maximum number of attempts, and a backoff rate that multiplies the wait time on each attempt. For example, a backoff rate of two with an initial interval of two seconds gives you two seconds, then four, then eight before giving up.
+
+The Catch configuration specifies what to do when retries are exhausted — typically routing to an error-handling state that logs the failure, sends a notification, or compensates for partial work. The special error name States dot ALL catches any error type. The ResultPath field controls where the error detail is injected into the state's input, so the error-handling state has access to what went wrong.
+
+Now let's cover service integrations.
+
+Step Functions Task states can call over two hundred AWS services directly — no Lambda glue layer required. The integration pattern determines how the state machine waits. The default request-response pattern calls the service and moves to the next state immediately without waiting for the job to complete — useful for fire-and-forget operations. The sync pattern, indicated by appending dot sync to the resource, calls the service and waits for the job to fully complete before proceeding — ideal for ECS tasks, Glue ETL jobs, and EMR steps that take minutes to hours. The wait-for-task-token pattern pauses the execution indefinitely and sends a task token to an external system — a human, a third-party API, or another service. The execution only resumes when that external system calls SendTaskSuccess or SendTaskFailure with the token. This pattern is essential for human approval workflows and any integration with systems outside your control.
+
+Now let's cover EventBridge.
+
+EventBridge is a serverless event bus that routes events from sources to targets based on pattern-matching rules. There are three types of event buses. The default event bus receives events from AWS services automatically — EC2 instance state changes, S3 object creation notifications, CodePipeline stage transitions, and hundreds of other AWS service events. Custom event buses receive events from your own applications via the PutEvents API call. Partner event buses receive events from SaaS providers — Datadog, Zendesk, GitHub, Stripe, and many others — without any polling or custom integration code.
+
+Every EventBridge event is a JSON object with standard fields: the source, the detail type describing what happened, the account and region, a timestamp, and a detail object containing the event-specific data.
+
+A rule has two parts: an event pattern that filters which events to match, and one or more targets that receive matching events. A rule can route to up to five targets simultaneously. Event patterns are JSON filters — an event matches when all specified fields equal the pattern values. You can match on exact values, prefixes, numeric ranges, existence of a field, and anything-but conditions.
+
+EventBridge supports a wide range of targets: Lambda, Step Functions, SQS, SNS, Kinesis Data Streams, Firehose, ECS tasks, CodePipeline, API Gateway, and any HTTP endpoint via API destinations. Before delivering to a target, you can use an input transformer to reshape the event — extracting specific fields or restructuring the JSON — without needing a Lambda function just for transformation.
+
+Scheduled rules fire on a time-based schedule rather than in response to an event. You can use a rate expression like "rate five minutes" for recurring intervals, or a cron expression for precise scheduling like "every weekday at eight in the morning UTC". Scheduled rules are the recommended replacement for cron jobs running on EC2.
+
+EventBridge also supports archiving events for later replay. You can configure a rule to archive all matching events with a retention period. When you need to reprocess events — after fixing a bug or adding a new consumer — you replay the archived events back to the bus as if they had just arrived.
+
+EventBridge Pipes create point-to-point integrations between a source and a target with optional filtering and enrichment in between. Sources include SQS, Kinesis, DynamoDB Streams, and Kafka. The pipe can filter records, enrich them with a Lambda call, and forward them to a target. This eliminates the need to write Lambda polling logic just to connect two services.
+
+The Schema Registry automatically discovers and registers the structure of events flowing through your bus. You can browse schemas in the console and generate typed code bindings in Python, Java, or TypeScript so your application works with structured objects instead of raw JSON.
+
+Let's close with the decision framework across EventBridge, SNS, SQS, and Step Functions.
+
+Use EventBridge when you need to react to AWS service events with complex routing rules, or when you want to connect SaaS events to your application without custom polling. Use SNS when a single event must be pushed to multiple subscribers simultaneously. Use SQS when you need to buffer work between a producer and a consumer with persistence and at-least-once delivery. Use Step Functions when you need to orchestrate a multi-step workflow with branching, retries, parallel execution, and long-running state — where the logic is too complex to express as a single function.
+
+In the next topic, we cover KMS and Secrets Manager — the encryption and secrets management services that underpin security across all of AWS.
