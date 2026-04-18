@@ -1,0 +1,67 @@
+SQS and SNS are AWS's core messaging services for building decoupled, event-driven architectures. SQS is a fully managed message queue — producers send messages, consumers poll and process them independently. SNS is a pub/sub notification service — publishers send to a topic and all subscribers receive a copy simultaneously. Together they are the foundation of scalable, loosely coupled systems on AWS and appear extensively on the Solutions Architect exam.
+
+Let's start with why decoupling matters.
+
+In a tightly coupled architecture, the frontend calls the backend synchronously. If the backend is slow or temporarily down, the frontend fails or waits. In a loosely coupled architecture, the frontend puts a message into an SQS queue and returns immediately — it always succeeds. The backend consumes from the queue at its own pace. If the backend goes down, messages accumulate safely in the queue and are processed when it recovers. Traffic spikes are absorbed by the queue rather than overwhelming the backend. Producers and consumers can scale independently.
+
+The classic exam pattern is an EC2 frontend tier that puts jobs into an SQS queue, with a backend worker fleet that scales based on queue depth via Auto Scaling.
+
+Now let's look at how SQS works.
+
+A producer calls SendMessage and the message is stored in the queue. A consumer calls ReceiveMessage, which delivers up to ten messages. The consumer processes each message and calls DeleteMessage to remove it. If DeleteMessage is never called — because the consumer crashed or took too long — the message reappears in the queue after the visibility timeout expires and another consumer picks it up.
+
+The visibility timeout is the duration a message is hidden from other consumers while one consumer is processing it. Set it longer than your maximum processing time. If it is too short, the same message gets processed twice. Consumers can call ChangeMessageVisibility to extend the timeout if processing is taking longer than expected.
+
+SQS has some important limits to know. Messages can be up to two hundred and fifty-six kilobytes. Retention ranges from one minute to fourteen days, defaulting to four days. Delivery delay can be set from zero to fifteen minutes. Long polling wait time is zero to twenty seconds.
+
+Now let's look at queue types.
+
+Standard queues offer nearly unlimited throughput, best-effort ordering, and at-least-once delivery. Duplicate messages are possible. Use standard queues when throughput is the priority and processing order does not matter — image processing, email sending, log ingestion.
+
+FIFO queues guarantee strict ordering within a message group and exactly-once processing. Throughput is three hundred messages per second, or three thousand with batching. FIFO queue names must end in dot fifo.
+
+The key FIFO concepts are Message Group ID and Message Deduplication ID. The Message Group ID groups related messages together — all messages with the same group ID are delivered in the order they were sent. Different group IDs are processed independently in parallel, which is how FIFO queues scale. The Message Deduplication ID prevents duplicates — SQS ignores messages with the same deduplication ID within a five-minute window. You can also enable content-based deduplication, where SQS automatically generates the deduplication ID from a hash of the message body.
+
+The exam rule is simple: if the scenario requires strict ordering or exactly-once processing — payments, inventory updates, command sequences — use FIFO. For high-throughput workloads where order does not matter, use Standard.
+
+Now let's cover Dead-Letter Queues.
+
+A Dead-Letter Queue, or DLQ, receives messages that have failed processing too many times. You configure a maxReceiveCount on the source queue — for example, three. After a message has been received and not deleted three times, SQS automatically moves it to the DLQ. This prevents a poison message from blocking the main queue indefinitely.
+
+The DLQ must be the same type as the source queue — a Standard DLQ for a Standard queue, a FIFO DLQ for a FIFO queue. You use the DLQ to inspect and debug failed messages. Once you fix the bug, you can use DLQ Redrive to replay the messages back to the source queue.
+
+Now let's cover long polling and delay queues.
+
+By default, ReceiveMessage returns immediately even if the queue is empty. This is short polling. It generates many empty API responses and unnecessary cost when the queue is idle.
+
+Long polling sets a WaitTimeSeconds value between one and twenty seconds. SQS waits up to that duration for a message to arrive before returning an empty response. This eliminates wasted API calls and reduces cost. Always prefer long polling — there is no downside for most workloads.
+
+A Delay Queue sets a delivery delay on messages — from zero to fifteen minutes. New messages are invisible to consumers until the delay expires. Use this when you need to defer processing — for example, sending a follow-up email ten minutes after a user signs up.
+
+Now let's cover SNS.
+
+SNS is a fully managed publish/subscribe messaging service. You create an SNS topic, subscribers register to receive messages from it, and when a publisher sends a message to the topic, SNS pushes a copy to all subscribers simultaneously. This is the core difference from SQS — SQS is pull-based and one consumer processes each message; SNS is push-based and all subscribers receive every message at the same time.
+
+SNS supports a wide range of subscriber types: SQS queues, Lambda functions, HTTP and HTTPS endpoints for webhooks, email and SMS, mobile push notifications through Apple APNS and Google FCM, and Kinesis Data Firehose for delivering notifications directly to S3 or Redshift.
+
+SNS also has FIFO topics, which guarantee ordered and exactly-once delivery. However, SNS FIFO topics can only deliver to SQS FIFO queues — no other subscriber types. Use SNS FIFO when you need ordered fan-out end to end.
+
+SNS subscription filter policies let each subscriber receive only the messages it cares about. You attach a filter policy to a subscription that matches on message attributes. For example, a subscriber handling order placement sets a filter for event type equals ORDER PLACED, while a subscriber handling shipping sets a filter for ORDER SHIPPED. Messages that don't match the filter are not delivered to that subscriber. This lets a single topic serve multiple microservices without each one receiving irrelevant events.
+
+Now let's cover the most important architecture pattern: SNS and SQS fan-out.
+
+The fan-out pattern combines SNS and SQS. A single SNS topic fans out to multiple SQS queues, each with its own consumer. One event published to the topic is delivered to all queues simultaneously and independently.
+
+Why not publish directly to multiple SQS queues from the application? The producer would need to call SendMessage once per queue. If one queue call fails, that consumer misses the message. The producer is tightly coupled to the list of consumers. With SNS fan-out, the producer publishes once and SNS handles delivery to all subscribers atomically. Adding a new consumer means adding a new SQS subscription to the topic — the producer code never changes.
+
+Each SQS queue in the fan-out can have its own DLQ, visibility timeout, and Auto Scaling policy. Messages persist in the queues even if consumers are temporarily down.
+
+A classic exam application of this pattern is S3 event fan-out. S3 supports only one event notification destination per event type. If you need the same S3 event delivered to multiple downstream systems, you route it through SNS first — S3 sends to SNS, SNS fans out to multiple SQS queues.
+
+Let's close by comparing SQS, SNS, and EventBridge.
+
+SQS is a queue. One consumer processes each message. Messages persist in the queue until deleted. Use SQS to buffer work and decouple a producer from a consumer. SNS is pub/sub. All subscribers receive each message simultaneously. Messages are not stored — if a subscriber is down, it misses the message. Use SNS when one event must trigger multiple downstream actions at once. EventBridge is an event bus with rich rule-based routing. It receives events from AWS services, SaaS providers, and custom applications, then routes them to targets based on pattern-matching rules. Use EventBridge when you need to react to AWS service events — like EC2 state changes or scheduled cron jobs — with complex routing logic.
+
+The exam pattern: decouple and buffer → SQS. Fan-out to many subscribers → SNS. Route AWS or SaaS events with rules → EventBridge.
+
+In the next topic, we cover Kinesis and MSK — the streaming data services for real-time ingestion and processing at scale.
