@@ -1,0 +1,47 @@
+ElastiCache is AWS's managed in-memory caching service. It reduces database load, cuts response times from milliseconds to microseconds, and handles session storage and real-time leaderboards at scale. ElastiCache supports two engines: Redis and Memcached — each with distinct trade-offs that the Solutions Architect exam tests directly.
+
+Let's start with why in-memory caching matters.
+
+Without a cache, every request hits the database. For read-heavy workloads with many repeated identical queries — like a product catalogue page loaded thousands of times per minute — the database gets hammered with redundant work. An in-memory cache sits in front of the database and absorbs those repeated reads, returning results in microseconds from memory instead of milliseconds from disk.
+
+There are two main caching patterns. Lazy loading, also called cache-aside, works like this: the application checks the cache first. On a cache hit, data is returned immediately. On a cache miss, the application fetches from the database, writes the result to the cache with a TTL, and returns it to the caller. The advantage is that only data actually requested gets cached. The disadvantage is that the first request for any data is always slow, and cached data can become stale if the underlying database changes before the TTL expires.
+
+Write-through caching writes to both the database and the cache on every write. The cache is always fresh. The trade-off is a write penalty — every write incurs double work — and the cache may fill with data that gets written frequently but is rarely read.
+
+A third pattern is the session store. User session data — login state, preferences, shopping cart — is written to ElastiCache when the user logs in. Any application server can retrieve it. This makes the application tier stateless, which is essential for Auto Scaling Groups where instances are constantly added and removed.
+
+Now let's compare Redis and Memcached.
+
+Redis supports rich data structures: strings, hashes, lists, sets, sorted sets, bitmaps, HyperLogLog, and streams. It supports persistence through snapshots and append-only file logging. It supports replication with a primary node and up to five read replicas, Multi-AZ automatic failover, pub-sub messaging, Lua scripting, and ACID transactions. It can back up and restore data.
+
+Memcached is simpler. It stores only strings. It has no persistence, no replication, no complex data types, and no backup. It is multi-threaded, which lets it utilise multiple CPU cores for higher raw throughput at simple get and set operations.
+
+The rule of thumb is: if you need anything beyond simple key-value caching — persistence, replication, sorted sets, pub-sub, or any advanced feature — use Redis. Use Memcached only when you need a simple, pure, horizontally scaled cache where multi-threaded throughput is the priority and losing cache data on node failure is acceptable.
+
+For the exam, almost every scenario involving ElastiCache points to Redis. Memcached appears rarely and only when the scenario explicitly emphasises simplicity or multi-threading.
+
+Now let's go deeper on Redis.
+
+A Redis Replication Group consists of a primary node that handles both reads and writes, plus up to five read replicas. With Multi-AZ enabled and automatic failover turned on, if the primary node fails, ElastiCache automatically promotes a replica to primary — typically within sixty seconds. Replicas are distributed across Availability Zones for resilience.
+
+Redis can run in two cluster modes. Cluster Mode Disabled means all data lives on a single shard — one primary with its replicas. This is simple to manage and supports up to around five hundred gigabytes of data. Cluster Mode Enabled shards data across up to five hundred shards, each with its own primary and replicas. This enables both horizontal write scaling and datasets that can grow to hundreds of terabytes.
+
+Redis's rich data structures map directly to real-world use cases. Sorted Sets are ideal for leaderboards — you store a score with each member and Redis maintains the sorted order. Getting the top ten players or the rank of a specific player is an O of log N operation, meaning it scales efficiently regardless of leaderboard size. Lists work well for activity feeds — push new items to the head and trim to the last N entries. HyperLogLog provides a memory-efficient probabilistic count of unique values — useful for counting unique visitors without storing every user ID. The INCR command on a string with an EXPIRE is the canonical pattern for rate limiting — increment a counter per time window and check if it exceeds the threshold.
+
+For persistence, Redis offers three options. RDB snapshots save a point-in-time snapshot at configured intervals — fast to restore, compact files, but data written since the last snapshot is lost on a crash. Append-only file logging records every write operation — near-zero data loss, but slower writes and larger files. No persistence is the fastest option — Redis is a pure cache and all data is lost on restart.
+
+For security, Redis supports an AUTH token — a password clients must provide before issuing commands. In-transit encryption uses TLS to encrypt traffic between your application and the Redis nodes. At-rest encryption uses KMS to encrypt RDB snapshots and AOF files stored on disk.
+
+Now let's cover Memcached more briefly.
+
+Memcached is purely a distributed hash table in memory. You create a cluster of nodes and the client library distributes keys across nodes using consistent hashing. Adding or removing nodes redistributes the keys automatically through Auto Discovery. There is no replication — if a node fails, those cached items are lost and will be fetched from the database on the next request. There is no persistence — all data is gone on restart. This simplicity is the point: Memcached is easy to reason about, multi-threaded for high throughput, and horizontally scalable by just adding nodes.
+
+Now let's look at how ElastiCache fits into broader architectures.
+
+For database query caching, your application uses a hash of the query as a cache key. On a cache miss, it executes the query, stores the result set in ElastiCache with a TTL matching acceptable staleness, and returns the result. Subsequent identical queries are served from cache. This can reduce RDS CPU utilisation dramatically for read-heavy workloads.
+
+For session storage in a horizontally scaled application, the session is written to ElastiCache at login. Every request on any app server reads the session from ElastiCache using the session ID from the request cookie. Because the session is not stored on any individual server, you can add or remove app servers freely without affecting user sessions. This is the standard pattern for stateless, Auto Scaling web tiers.
+
+Comparing ElastiCache to the other caching option — DAX — the key difference is scope. DAX is DynamoDB-specific and drops in as a replacement for the DynamoDB SDK client. ElastiCache works with any backend and uses the Redis or Memcached API. Use DAX when you need to accelerate DynamoDB reads with minimal code change. Use ElastiCache when you are caching results from RDS, complex application logic, or multiple data sources.
+
+In the next topic, we cover Redshift and other purpose-built databases — the data warehousing and analytics layer of AWS.
