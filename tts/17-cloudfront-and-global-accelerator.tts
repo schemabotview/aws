@@ -1,0 +1,71 @@
+CloudFront is AWS's global Content Delivery Network. It caches content at edge locations worldwide to reduce latency for end users and offload traffic from your origin servers. Global Accelerator uses the same AWS backbone to accelerate non-cacheable workloads like APIs, gaming, and VoIP. Together they are AWS's two answers to the problem of serving users globally with low latency.
+
+Let's start with how CloudFront works.
+
+When a user requests content, DNS resolves their request to the nearest CloudFront edge location. If the edge has a cached copy — a cache hit — it returns the content immediately with very low latency. If not — a cache miss — it forwards the request to your origin server, caches the response, and returns it to the user. All subsequent requests for that content from that edge location are served from cache until the TTL expires.
+
+CloudFront has over four hundred edge locations globally, plus thirteen regional edge caches that act as a mid-tier between the edges and your origin. Traffic from an edge location to your origin travels over the AWS private backbone, not the public internet, which makes it faster and more reliable than a direct origin fetch.
+
+The benefits are: lower latency for users everywhere, reduced load on your origin, built-in DDoS protection through AWS Shield Standard, HTTPS termination at the edge, and global reach without deploying infrastructure in multiple regions.
+
+Now let's cover origins.
+
+An origin is where CloudFront fetches content on a cache miss. The most common origin is an S3 bucket for static assets. You can also use an Application Load Balancer for dynamic content, an EC2 instance, an S3 static website endpoint, or any publicly reachable HTTP server — including on-premises servers.
+
+For S3 origins, the recommended security pattern is Origin Access Control, or OAC. OAC allows only CloudFront to read from your S3 bucket — the bucket stays private with no public access. You attach a bucket policy that allows only the CloudFront service principal, and CloudFront signs requests to S3 using SigV4. OAC replaced the older Origin Access Identity and adds support for SSE-KMS encrypted buckets and newer AWS regions.
+
+For origin-level failover, you can create an Origin Group with a primary and a secondary origin. If the primary returns a 5xx error or times out, CloudFront automatically retries the secondary. This gives you CDN-level failover — for example, primary S3 bucket in us-east-1 and secondary in eu-west-1.
+
+Now let's look at cache behaviours.
+
+A cache behaviour maps a URL path pattern to an origin and controls caching settings for that path. A single distribution can have multiple behaviours. For example: requests to slash api slash star go to an Application Load Balancer with no caching, requests to slash images slash star go to S3 with a twenty-four-hour TTL, and everything else goes to S3 with a one-hour TTL.
+
+Each behaviour controls the viewer protocol policy — whether to allow HTTP, require HTTPS, or redirect HTTP to HTTPS. It also controls which HTTP methods are allowed, the cache policy, and which edge functions to attach.
+
+TTL determines how long content stays cached. CloudFront respects Cache-Control and Expires headers from your origin. The default TTL is twenty-four hours when the origin sends no cache headers. Setting the minimum TTL to zero forces CloudFront to always revalidate with the origin.
+
+When you deploy new content, you can manually invalidate cached objects. Invalidation costs money per path request, so a better practice is to use versioned filenames — for example, app dot v2 dot js — so each deployment creates a new cache key and old versions expire naturally.
+
+The cache key determines what constitutes a unique cached response. By default it is just the URL path. You can add query strings, headers, or cookies to the cache key for more granular caching. However, the more items in the cache key, the more unique entries are created, which reduces your cache hit ratio and increases origin fetches.
+
+Now let's cover security.
+
+For HTTPS with a custom domain, you attach an ACM certificate. The certificate must be created in the us-east-1 region regardless of where your distribution serves traffic — this is a common exam trap.
+
+Geo restriction lets you block or allow requests by country. You define either an allowlist — only these countries can access — or a blocklist. Blocked requests receive a 403 response.
+
+Signed URLs and Signed Cookies control temporary access to private content. A signed URL grants access to a single specific file and includes an expiry time and cryptographic signature. A signed cookie grants access to multiple files — useful for subscription content where a user should have access to an entire section of your site. Both are verified at the edge before CloudFront serves the content.
+
+You can also attach an AWS WAF web ACL to a CloudFront distribution to block SQL injection, cross-site scripting, rate-limit abusive clients, or block specific IPs and request patterns.
+
+Now let's compare the two edge function options.
+
+CloudFront Functions and Lambda at Edge both let you run code at CloudFront edge locations to customise requests and responses. The key differences are in scope, performance, and cost.
+
+CloudFront Functions run only on viewer requests and viewer responses — the two points closest to the user. They have a one-millisecond execution limit, two megabytes of memory, no network access, and cost about six times less than Lambda at Edge. They are designed for lightweight, high-frequency operations: URL rewrites, redirects, adding security headers, normalising query strings for cache key consistency, and simple token validation.
+
+Lambda at Edge can run at all four trigger points — viewer request, origin request, origin response, and viewer response. It supports Node.js and Python, has up to thirty seconds of execution time for origin triggers, up to ten gigabytes of memory, and can make network calls. Use it for complex logic: authenticating users against an external identity provider, fetching data from DynamoDB to personalise a response, selecting an origin based on request properties, or A/B testing.
+
+Now let's talk about price classes.
+
+CloudFront pricing varies by edge location region. Price Class All uses every edge location worldwide for the lowest latency but highest cost. Price Class 200 excludes South America, Australia, and New Zealand. Price Class 100 uses only North America and Europe, which is the cheapest option. Users outside your price class are still served — just from the nearest included edge location, with slightly higher latency.
+
+Now let's cover the CloudFront versus S3 Cross-Region Replication comparison, which often appears on the exam.
+
+CloudFront caches content automatically across all its edge locations. It is TTL-based — content can become stale until the cache expires. It is read-only from the user's perspective. It covers four hundred locations automatically and is ideal for static content with a high cache hit ratio.
+
+S3 Cross-Region Replication copies objects to specific S3 buckets in specific regions you choose. The data is always fresh — replication is near real-time. Users reading from the replicated bucket get the current version of every object. Use replication when you need data specifically positioned in a particular region, always up to date, and accessible as a full S3 bucket for read and write.
+
+Now let's cover AWS Global Accelerator.
+
+Global Accelerator improves application performance by routing traffic through the AWS global backbone rather than the public internet. When a user in Tokyo connects to your application in us-east-1, instead of traversing many unpredictable public internet hops, their traffic enters the AWS network at the nearest edge location in Tokyo and travels over AWS's private backbone the rest of the way.
+
+Global Accelerator provides two static Anycast IPv4 addresses for your application. Anycast means the same IP is advertised from multiple edge locations simultaneously, so users are automatically routed to the nearest entry point. The IPs are static — they never change — which is valuable for clients that hard-code IP addresses or for firewall allowlisting where you need a predictable, small set of IPs.
+
+Global Accelerator supports Application Load Balancers, Network Load Balancers, EC2 instances, and Elastic IPs as endpoints, across multiple regions. It includes built-in health checks and automatic failover — when an endpoint becomes unhealthy, traffic shifts to a healthy endpoint in seconds, without waiting for DNS TTL to expire.
+
+Traffic dials let you shift a percentage of traffic away from an endpoint group — useful for deployments or maintenance windows. Endpoint weights distribute traffic within a group.
+
+The critical exam distinction between CloudFront and Global Accelerator is: CloudFront is an application-layer CDN that caches HTTP and HTTPS content. Global Accelerator is a network-layer accelerator that works with TCP and UDP and does not cache anything. If the scenario mentions static IP addresses, non-HTTP protocols, gaming, IoT, VoIP, or near-instant failover without DNS involvement, the answer is Global Accelerator. If it mentions caching, content delivery, static websites, or media streaming, the answer is CloudFront.
+
+In the next topic, we move to relational databases — RDS and Aurora.
