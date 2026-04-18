@@ -37,7 +37,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 20 | ElastiCache | `20-elasticache.ipynb` | `20-elasticache.wav` |
 | 21 | Redshift & Other Databases | `21-redshift-and-other-databases.ipynb` | `21-redshift-and-other-databases.wav` |
 | 22 | SQS & SNS | `22-sqs-and-sns.ipynb` | `22-sqs-and-sns.wav` |
-| 23 | Kinesis & MSK | _(planned)_ | `23-kinesis-and-msk.wav` |
+| 23 | Kinesis & MSK | `23-kinesis-and-msk.ipynb` | `23-kinesis-and-msk.wav` |
 | 24 | Step Functions & EventBridge | _(planned)_ | `24-step-functions-and-eventbridge.wav` |
 | 25 | KMS & Secrets Manager | _(planned)_ | `25-kms-and-secrets-manager.wav` |
 | 26 | Shield, WAF & Cognito | _(planned)_ | `26-shield-waf-and-cognito.wav` |

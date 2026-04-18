@@ -1,0 +1,65 @@
+Kinesis and MSK are AWS's managed streaming services for ingesting, processing, and analysing real-time data at scale. Kinesis is a family of AWS-native services covering data streams, delivery, and analytics. MSK — Managed Streaming for Apache Kafka — is a fully managed Kafka service for teams already using the Kafka ecosystem. Both appear on the Solutions Architect exam, with Kinesis covered in more depth.
+
+Let's start with why streaming is different from batch processing.
+
+In a batch architecture, events accumulate over time and are processed together — minutes or hours later. In a streaming architecture, events are processed as they arrive, with millisecond to second latency. Use streaming when you need to act on data immediately: fraud detection, real-time dashboards, live recommendations, IoT telemetry, log analytics. Use batch when latency tolerance is high and processing in bulk is more efficient.
+
+The key distinction between Kinesis and SQS is also worth establishing upfront. SQS is a work queue — each message is processed by one consumer and then deleted. Kinesis is a data stream — records are retained for hours to days, and multiple consumers can read the same data independently. This makes Kinesis suitable for fan-out scenarios where several different applications all need to process the same stream of events.
+
+Now let's cover Kinesis Data Streams.
+
+Kinesis Data Streams is a real-time data streaming service. Producers push records into a stream, and consumers read and process them.
+
+The fundamental unit of capacity in a Kinesis stream is a shard. Each shard provides one megabyte per second or one thousand records per second of write throughput, and two megabytes per second of read throughput. You scale a stream by splitting shards to add capacity or merging shards to reduce it. A stream with four shards has four megabytes per second of write capacity and eight megabytes per second of read capacity.
+
+Each record in the stream has three components. The partition key is chosen by the producer and is hashed by Kinesis to determine which shard receives the record. Choosing a high-cardinality partition key — one with many distinct values — distributes records evenly across shards. A low-cardinality partition key creates hot shards where one shard receives most of the traffic and gets throttled. The sequence number is assigned by Kinesis and is unique and monotonically increasing within a shard. The data blob is the payload, up to one megabyte.
+
+Records are retained in the stream after consumption. The default retention is twenty-four hours, extendable to seven days or up to three hundred and sixty-five days. This means consumers can replay historical records from any point within the retention window — something SQS cannot do.
+
+Kinesis offers two capacity modes. Provisioned mode requires you to specify the number of shards upfront. You manage scaling by splitting or merging shards. On-demand mode automatically scales capacity based on traffic and charges per gigabyte. Use on-demand for unpredictable workloads.
+
+Now let's look at how consumers read from a stream.
+
+Standard consumers poll the stream using GetRecords. The two megabytes per second of read throughput per shard is shared across all standard consumers on that shard. If five consumers are reading from the same shard, each gets four hundred kilobytes per second. Latency is around two hundred milliseconds.
+
+Enhanced Fan-Out gives each consumer its own dedicated two megabytes per second per shard, regardless of how many other consumers are reading. Instead of polling, Kinesis pushes records to Enhanced Fan-Out consumers over an HTTP/2 connection. Latency drops to around seventy milliseconds. Use Enhanced Fan-Out when you have multiple consumers that all need full throughput from the stream.
+
+Consumers track their position in the stream using a sequence number checkpoint — typically stored in DynamoDB via the Kinesis Client Library. On restart, a consumer resumes from where it left off. You can also set the starting position when creating a shard iterator: TRIM HORIZON starts from the oldest available record, LATEST starts from new records only, and AT TIMESTAMP starts from a specific point in time.
+
+Now let's cover Kinesis Data Firehose.
+
+Firehose is a fully managed delivery service. It loads streaming data into destinations without you managing consumers, scaling, or checkpointing. You point it at a source — a Kinesis stream or direct producer writes — and configure a destination, and Firehose handles the rest.
+
+The supported destinations are Amazon S3, Amazon Redshift, Amazon OpenSearch Service, Splunk, and custom HTTP endpoints including Datadog and New Relic. For Redshift, Firehose writes to S3 first and then issues a COPY command to load into Redshift.
+
+Firehose buffers data before delivering. You configure a buffer size — up to one hundred and twenty-eight megabytes — or a buffer interval — sixty to nine hundred seconds. Firehose delivers when whichever threshold is reached first. The minimum interval is sixty seconds, which is why Firehose is described as near real-time rather than real-time.
+
+You can optionally attach a Lambda function to transform records in flight — converting JSON to Parquet, filtering fields, or enriching records before they land at the destination. Firehose can also convert JSON to Parquet or ORC format using a Glue schema, which dramatically reduces storage and query cost in S3.
+
+The critical difference from Kinesis Data Streams is that Firehose has no data retention — it is a delivery pipe, not a store. If a record fails to deliver, it can be backed up to S3, but there is no replay capability.
+
+The exam decision is straightforward: if you need to load streaming data to S3, Redshift, or OpenSearch without writing consumer code, use Firehose. If you need real-time processing with custom logic — anomaly detection, enrichment, routing to multiple outputs — use Kinesis Data Streams with Lambda or EC2 consumers.
+
+Now let's cover Kinesis Data Analytics.
+
+Kinesis Data Analytics runs real-time analytics on streaming data using SQL or Apache Flink. You connect it to a Kinesis Data Stream or Firehose as input, write your processing logic, and route output to another stream, Firehose, or Lambda.
+
+The SQL variant is simpler — use it for windowed aggregations, filtering, and basic transformations. The Apache Flink variant supports complex stateful processing, machine learning inference, and custom Java or Python code. Common use cases include computing rolling averages over a one-minute window, detecting anomalies when a metric crosses a threshold, and enriching records with reference data before delivery.
+
+Now let's cover Amazon MSK.
+
+MSK is a fully managed Apache Kafka service. It provisions Kafka brokers and ZooKeeper nodes, handles patching and failure recovery, and replicates data across Availability Zones.
+
+The core Kafka concepts map closely to Kinesis. A topic in Kafka is like a Kinesis stream — a named channel for records. A topic is divided into partitions, each of which is an ordered, immutable log. Records with the same key go to the same partition, just as records with the same partition key go to the same Kinesis shard. A broker is a Kafka server that stores partitions and serves producers and consumers. A consumer group is a set of consumers that collectively read all partitions of a topic — each partition is assigned to exactly one consumer in the group, enabling parallel processing. The offset tracks a consumer's position within a partition, equivalent to a Kinesis sequence number.
+
+MSK is Kafka-compatible — you can use existing Kafka producers, consumers, and connectors without code changes. MSK Serverless removes broker management entirely and auto-scales capacity. MSK Connect runs managed Kafka Connect connectors to move data between Kafka topics and AWS services like S3, DynamoDB, and RDS.
+
+The choice between Kinesis and MSK comes down to ecosystem. If you are building a new streaming pipeline on AWS and have no existing Kafka investment, use Kinesis — it integrates natively with Lambda, Firehose, Analytics, and IAM. If you are migrating an existing Kafka workload to AWS, or your team needs Kafka-specific features like Kafka Streams, ksqlDB, or the broader Kafka connector ecosystem, use MSK. The exam signals this clearly — "Apache Kafka" or "migrate existing Kafka" points to MSK; net-new AWS streaming points to Kinesis.
+
+Let's close with the key architectural decision patterns.
+
+Use Kinesis Data Streams when multiple consumers need to independently read the same stream, when you need ordered records per partition key, or when replay of historical data within the retention window is required. Use SQS when each message should be processed by exactly one consumer and then discarded — the classic work queue pattern. Use Firehose when the goal is simply to land streaming data in S3, Redshift, or OpenSearch with minimal code. Use Kinesis Data Analytics when you need real-time SQL or Flink processing on the stream itself.
+
+A useful CloudWatch metric to know is IteratorAgeMilliseconds. This measures the lag between when a record was written to the stream and when it was last read by a consumer. A high iterator age means consumers are falling behind — either they are too slow for the current throughput or there are not enough shards.
+
+In the next topic, we cover Step Functions and EventBridge — the orchestration and event routing services for building complex, serverless workflows on AWS.
