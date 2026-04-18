@@ -1,0 +1,69 @@
+DynamoDB is AWS's fully managed NoSQL database — a key-value and document store that delivers single-digit millisecond performance at any scale, with no servers to manage, no schema to define upfront, and automatic replication across multiple Availability Zones. It is one of the most important services on the Solutions Architect exam and the foundation of serverless architectures on AWS.
+
+Let's start with the core concepts.
+
+DynamoDB organises data into tables. A table contains items, which are individual data records — equivalent to rows in a relational database. Each item has attributes — equivalent to columns — but unlike a relational database, DynamoDB is schemaless. Items in the same table can have completely different attributes. The only attributes required on every item are the primary key attributes.
+
+The primary key uniquely identifies each item. There are two options. A simple primary key uses only a partition key — each item must have a unique partition key value. A composite primary key uses a partition key plus a sort key — multiple items can share the same partition key as long as their sort keys differ. For example, a table of orders might use customer ID as the partition key and order ID as the sort key, allowing you to store all orders for a customer under the same partition.
+
+The partition key is hashed by DynamoDB to determine which physical storage partition holds the item. Good partition key design means choosing a high-cardinality attribute — one with many distinct values — so data is spread evenly across partitions. A low-cardinality partition key like a status field with only two values creates hot partitions, where one partition receives most of the traffic and gets throttled.
+
+DynamoDB supports scalar data types — String, Number, Binary, Boolean, and Null — as well as Set types for unique collections, and document types including List for ordered mixed-type collections and Map for nested key-value structures.
+
+Now let's cover capacity modes.
+
+DynamoDB offers two billing and scaling modes. In provisioned mode, you specify the number of Read Capacity Units and Write Capacity Units you need. One Read Capacity Unit provides one strongly consistent read per second, or two eventually consistent reads per second, for items up to four kilobytes. One Write Capacity Unit provides one write per second for items up to one kilobyte. Items larger than these thresholds consume proportionally more units — a ten-kilobyte item requires three Read Capacity Units for a strongly consistent read.
+
+For a quick calculation example: reading ten items per second at four kilobytes each with strong consistency requires ten Read Capacity Units. The same read with eventual consistency requires only five. Writing ten items per second at two point five kilobytes each requires thirty Write Capacity Units — you round up to three kilobytes per item, so three units per item times ten items.
+
+You can enable Auto Scaling on provisioned tables to automatically adjust capacity within a minimum and maximum range based on actual utilisation.
+
+In on-demand mode, there is no capacity to provision. DynamoDB scales instantly to handle any traffic volume and you pay per request. On-demand mode is more expensive per request but requires no planning, never throttles, and is ideal for spiky or unpredictable workloads and new tables where you do not yet know the traffic patterns.
+
+Now let's cover read consistency.
+
+Because DynamoDB replicates data across three Availability Zones, there is a brief replication lag after a write. Eventually consistent reads — the default — may return data that is slightly stale. Strongly consistent reads always return the latest committed data but cost twice as many Read Capacity Units. Transactional reads provide ACID guarantees across multiple items and cost four times as many Read Capacity Units. For most application reads, eventually consistent is sufficient and cuts your read costs in half.
+
+Now let's look at secondary indexes.
+
+Secondary indexes allow you to query on attributes other than the primary key. There are two types: Local Secondary Indexes and Global Secondary Indexes.
+
+A Local Secondary Index uses the same partition key as the base table but a different sort key. This lets you query items within a partition sorted by a different attribute. Local Secondary Indexes must be created at table creation time — they cannot be added later. They share the base table's throughput capacity and support strongly consistent reads. The total size of data per partition key value across the table and all its Local Secondary Indexes is limited to ten gigabytes.
+
+A Global Secondary Index can have an entirely different partition key and sort key from the base table. It can be added or removed at any time after the table is created. It has its own separate provisioned throughput. However, Global Secondary Indexes only support eventually consistent reads — you cannot request strongly consistent reads from a GSI.
+
+The exam decision: if you need strongly consistent reads on an alternate key and know the access pattern at design time, use a Local Secondary Index. If you need to query on a different key and might not know all access patterns upfront, use a Global Secondary Index.
+
+Now let's cover operations.
+
+For single items, GetItem fetches by primary key, PutItem creates or fully replaces an item, UpdateItem modifies specific attributes without overwriting the whole item, and DeleteItem removes an item by key.
+
+For multiple items, Query is the preferred operation — it retrieves items matching a partition key value and an optional sort key condition, reading only the relevant partition. Scan reads every item in the entire table and then applies a filter. Scan consumes capacity for every item scanned, not just the ones returned, making it expensive and slow on large tables. Design your primary keys and indexes to support your access patterns with Query and avoid Scan in production.
+
+BatchGetItem retrieves up to one hundred items across tables in a single call. BatchWriteItem performs up to twenty-five puts or deletes across tables. Transactions provide ACID guarantees — TransactWriteItems commits up to one hundred writes across tables atomically, and TransactGetItems reads up to one hundred items consistently. Transactions cost twice the normal capacity units.
+
+Now let's cover DynamoDB Accelerator, or DAX.
+
+DAX is a fully managed, DynamoDB-compatible in-memory cache that sits between your application and DynamoDB. Cache hits are served in microseconds — far faster than DynamoDB's single-digit millisecond baseline. DAX uses a write-through strategy: writes go to DynamoDB first, then the cache is updated. The DAX SDK is API-compatible with the DynamoDB SDK, so switching is a minimal code change — you point at the DAX cluster endpoint instead of the DynamoDB endpoint.
+
+DAX is deployed as a cluster with a primary node and read replicas across Availability Zones, inside your VPC. The default item cache TTL is five minutes and the query cache TTL is one minute.
+
+Compare DAX to ElastiCache: DAX works only with DynamoDB and is a drop-in replacement. ElastiCache uses Redis or Memcached APIs and can cache results from any backend. Use DAX for accelerating DynamoDB read operations. Use ElastiCache when you need to cache complex aggregations, results from multiple sources, or data computed by your application.
+
+Now let's cover DynamoDB Streams.
+
+DynamoDB Streams captures a time-ordered sequence of item-level changes — creates, updates, and deletes. You can configure what each stream record contains: the primary key only, the new item state, the old item state, or both old and new states. Records are retained in the stream for twenty-four hours.
+
+Lambda can process the stream as an event source mapping — DynamoDB invokes your Lambda function with batches of stream records. Common use cases include triggering notifications when new records are created, replicating data to a search index like OpenSearch, writing audit logs to S3, and triggering downstream microservices in an event-driven architecture.
+
+Now let's cover Global Tables.
+
+Global Tables extends DynamoDB to multiple AWS regions in an active-active configuration. Every region has a full replica of the table and can accept both reads and writes. Changes made in any region are replicated to all other regions, typically within one second. Conflict resolution uses last-writer-wins based on timestamp. Global Tables require DynamoDB Streams to be enabled and the table must use on-demand mode or provisioned mode with Auto Scaling. Your application simply reads and writes to the local regional table — replication is transparent.
+
+Now let's cover TTL — Time to Live.
+
+TTL lets you define an expiry time on individual items. You designate an attribute to hold a Unix epoch timestamp in seconds. DynamoDB automatically deletes items after that timestamp, at no Read or Write Capacity Unit cost. Deletions happen within forty-eight hours of the expiry time — they are not immediate. TTL deletions appear in DynamoDB Streams, so you can trigger cleanup logic when items expire. Use TTL for session data, temporary cart items, rate-limiting counters, and any data with a natural expiry.
+
+For backup, DynamoDB supports on-demand backups — manual full backups that persist until you delete them and have no performance impact. Point-in-time recovery, or PITR, continuously backs up your table for up to thirty-five days, allowing you to restore to any second within that window. PITR must be explicitly enabled per table and always restores to a new table.
+
+In the next topic, we cover ElastiCache — AWS's managed in-memory caching service for Redis and Memcached.
