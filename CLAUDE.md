@@ -40,7 +40,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 23 | Kinesis & MSK | `23-kinesis-and-msk.ipynb` | `23-kinesis-and-msk.wav` |
 | 24 | Step Functions & EventBridge | `24-step-functions-and-eventbridge.ipynb` | `24-step-functions-and-eventbridge.wav` |
 | 25 | KMS & Secrets Manager | `25-kms-and-secrets-manager.ipynb` | `25-kms-and-secrets-manager.wav` |
-| 26 | Shield, WAF & Cognito | _(planned)_ | `26-shield-waf-and-cognito.wav` |
+| 26 | Shield, WAF & Cognito | `26-shield-waf-and-cognito.ipynb` | `26-shield-waf-and-cognito.wav` |
 | 27 | Shared Responsibility & Compliance | _(planned)_ | `27-shared-responsibility-and-compliance.wav` |
 | 28 | CloudWatch, CloudTrail & Config | _(planned)_ | `28-cloudwatch-cloudtrail-and-config.wav` |
 | 29 | Organizations & Service Control Policies | _(planned)_ | `29-organizations-and-service-control-policies.wav` |

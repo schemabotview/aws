@@ -1,0 +1,51 @@
+Shield, WAF, and Cognito are AWS's services for protecting applications from network attacks and managing user identity. Shield defends against DDoS attacks. WAF filters malicious HTTP traffic at the application layer. Cognito handles user authentication and authorisation for web and mobile applications. Together they form the security perimeter between the internet and your application.
+
+Let's start with AWS Shield.
+
+Shield protects AWS resources from DDoS attacks — attempts to overwhelm your infrastructure with malicious traffic to make it unavailable to legitimate users.
+
+Shield Standard is free and automatically enabled for every AWS customer. It protects against common Layer 3 and Layer 4 attacks: SYN floods, UDP reflection attacks, and volumetric attacks that try to saturate your network bandwidth. Shield Standard is active on CloudFront, Route 53, Elastic Load Balancers, and EC2 instances with Elastic IPs. No configuration is required — it is always on.
+
+Shield Advanced costs three thousand dollars per month per organisation, plus data transfer fees. It adds several critical capabilities on top of Standard. First, Layer 7 DDoS protection — Shield Advanced can detect and mitigate HTTP floods targeting your application, not just network-level attacks. Second, DDoS cost protection — if a DDoS attack causes your EC2, ELB, CloudFront, or Route 53 costs to spike due to Auto Scaling or increased traffic, AWS credits those costs. Third, twenty-four-seven access to the AWS Shield Response Team — AWS security experts who assist in real time during an attack and can create WAF rules on your behalf. Fourth, detailed attack visibility through CloudWatch metrics and alarms. For the exam, Shield Advanced is the answer whenever a scenario mentions DDoS cost protection, Layer 7 DDoS protection, or access to AWS security experts during an attack.
+
+Now let's cover AWS WAF.
+
+WAF is a Web Application Firewall that filters HTTP and HTTPS traffic at Layer 7 based on rules you define. It blocks common web exploits — SQL injection, cross-site scripting, malicious bots — before they reach your application. WAF attaches to CloudFront at the edge, or regionally to an Application Load Balancer, API Gateway, or AppSync.
+
+The top-level WAF resource is a Web ACL — Web Access Control List. It is a container for rules with a default action of either Allow or Block. Incoming requests are evaluated against rules in priority order. The first rule that matches determines the outcome for that request.
+
+WAF supports several rule types. IP set rules block or allow specific IP addresses or CIDR ranges. Geo match rules block or allow traffic by country. Rate-based rules block any IP address that exceeds a request threshold within a five-minute window — for example, block any IP making more than two thousand requests in five minutes. String match rules inspect the URI, query string, headers, or body for specific patterns. SQL injection and cross-site scripting rules detect those specific attack patterns in any request field. Size constraint rules block requests with an oversized body or URI.
+
+AWS Managed Rule Groups are pre-built, regularly updated rule sets you can add to your Web ACL without writing rules yourself. The Core Rule Set protects against the OWASP Top Ten vulnerabilities. The Bot Control group detects and blocks automated bots and scrapers. Account Takeover Prevention detects credential stuffing attacks on your login pages. The Anonymous IP List blocks Tor exit nodes, VPN providers, and known proxy services.
+
+Rule actions are Allow, Block, Count, or CAPTCHA. The Count action is particularly useful — it matches requests and increments a counter but does not block them. Use Count mode when testing a new rule to verify it matches what you intend before switching it to Block.
+
+WAF logs every request decision to Kinesis Data Firehose, CloudWatch Logs, or S3 — useful for security analysis and compliance.
+
+AWS Firewall Manager sits above WAF and Shield. It lets you define WAF rules, Shield Advanced protections, and Security Group policies once in a management account and automatically apply them across all accounts in an AWS Organisation. New accounts joining the organisation automatically receive the policies. This is the answer whenever an exam scenario asks about centrally managing security rules across hundreds of accounts.
+
+Now let's cover Amazon Cognito.
+
+Cognito provides user authentication and authorisation for web and mobile applications. It has two distinct components with very different purposes: User Pools and Identity Pools.
+
+User Pools answer the question "who are you?" — they handle authentication. Identity Pools answer the question "what can you do?" — they handle AWS authorisation.
+
+A User Pool is a managed user directory. It handles user registration, sign-in, and user management for your application. Users can sign in with a username and password, or through social identity providers — Google, Facebook, Apple, and Amazon. User Pools also support enterprise federation via SAML 2.0 and OpenID Connect, allowing users to sign in with corporate credentials from Okta, Azure AD, or ADFS. Additional features include multi-factor authentication, email and phone verification, password policies, and a hosted sign-in UI that you can customise with your branding.
+
+When a user successfully authenticates with a User Pool, Cognito returns three JWT tokens. The ID token contains identity claims — the user's name, email, and any custom attributes. The Access token authorises access to your API and contains OAuth scopes. The Refresh token allows the application to obtain new ID and Access tokens without requiring the user to sign in again.
+
+User Pools integrate directly with API Gateway and ALB. You can configure API Gateway with a Cognito authoriser — API Gateway validates the JWT from the User Pool automatically, with no custom Lambda authoriser code required. An ALB can also redirect unauthenticated requests to the Cognito Hosted UI, validate the returned token, and pass the user's identity to your backend.
+
+User Pool Lambda triggers let you inject custom logic at key authentication events. Pre sign-up triggers can auto-confirm users or add validation. Post confirmation triggers can send a welcome email or create a record in DynamoDB. Pre token generation triggers can add custom claims to the JWT. These triggers make User Pools extensible without modifying the core authentication flow.
+
+Now let's cover Identity Pools.
+
+An Identity Pool — also called Federated Identities — grants users temporary AWS credentials so they can call AWS services directly from a client application. The flow works like this. The user authenticates with a User Pool, Google, Facebook, or any SAML provider and receives a token. The application sends that token to the Identity Pool. The Identity Pool calls STS — the Security Token Service — and exchanges the token for temporary AWS credentials. The application then uses those credentials to call AWS services directly — uploading a file to S3, reading from DynamoDB, calling an API.
+
+Each Identity Pool has two IAM roles: an authenticated role for logged-in users and an unauthenticated role for guest users. You can also configure role-based access control to map users to different IAM roles based on their User Pool group or claims in their token.
+
+The most common architecture combines both services. The User Pool handles authentication and returns a JWT. The Identity Pool takes that JWT and exchanges it for AWS credentials. This separates the concerns cleanly — User Pool owns identity, Identity Pool owns AWS access.
+
+Cognito also includes adaptive authentication, which analyses each sign-in attempt for risk signals — new device, unusual location, impossible travel between locations. For high-risk attempts, Cognito can automatically require MFA or block the sign-in, without any custom code.
+
+In the next topic, we cover the Shared Responsibility Model and AWS compliance — the framework that defines what AWS secures and what you are responsible for.
