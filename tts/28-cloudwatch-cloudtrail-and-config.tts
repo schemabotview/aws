@@ -1,0 +1,67 @@
+CloudWatch, CloudTrail, and Config are AWS's core observability and governance services. CloudWatch monitors the performance of your resources and applications — metrics, logs, and alarms. CloudTrail records every API call made in your account — the who, what, when, and where of all AWS activity. Config tracks the configuration state of your resources over time — recording what changed and whether it complies with your policies. Together they answer three fundamental questions: how is my system performing, who did what, and is my infrastructure compliant?
+
+Let's start with CloudWatch Metrics.
+
+A metric is a time-series of data points representing a measurable value — CPU utilisation, request count, latency, error rate. Every metric belongs to a namespace, which is a logical grouping. AWS services publish metrics into their own namespaces — AWS/EC2, AWS/RDS, AWS/Lambda. Your application publishes into custom namespaces you define.
+
+Each metric is further identified by dimensions — key-value pairs that identify the specific resource. For example, the EC2 CPU utilisation metric has a dimension of instance ID that identifies which instance the data point belongs to.
+
+Standard metrics are published automatically by AWS services and are free. Custom metrics are published by your application or the CloudWatch Agent and cost a small amount per metric per month. There is an important gap in standard EC2 metrics: CloudWatch does not collect memory utilisation or disk space from EC2 instances by default. These metrics exist inside the operating system, not at the hypervisor level where AWS can observe them. To get memory and disk metrics from EC2, you must install the CloudWatch Agent inside the instance.
+
+Metrics are retained at decreasing granularity over time. One-minute data points are kept for fifteen days. Five-minute data points are kept for sixty-three days. One-hour data points are kept for fifteen months.
+
+Now let's cover CloudWatch Alarms.
+
+An alarm watches a single metric and transitions between three states: OK when the metric is within the threshold, ALARM when it has breached the threshold, and INSUFFICIENT DATA when there is not enough data to evaluate — common during startup or when a metric has gaps.
+
+You configure the threshold, the period duration, and how many evaluation periods must breach before the alarm fires. For example, trigger the alarm only if CPU exceeds eighty percent in two of the last three five-minute periods. This prevents a single spike from causing unnecessary alerts.
+
+Alarm actions include sending an SNS notification — which can trigger email, SMS, or Lambda — executing an Auto Scaling policy to scale in or out, or taking an EC2 action such as stopping, rebooting, or recovering an instance.
+
+Composite Alarms combine multiple alarms with AND or OR logic. This reduces alert noise — instead of alerting on high CPU alone, you can require both high CPU and high memory before alerting, avoiding false positives from a single brief spike.
+
+For billing monitoring, create an alarm on the EstimatedCharges metric in the AWS/Billing namespace. This metric is only available in the us-east-1 region and requires billing alerts to be enabled in account preferences.
+
+Now let's cover CloudWatch Logs.
+
+CloudWatch Logs collects, stores, and queries log data from AWS services and your applications. The structure is hierarchical. A log group is the primary container — for example, /aws/lambda/my-function. Within a log group are log streams, each representing a sequence of events from a single source — one Lambda container instance, one EC2 instance. Log streams contain individual log events with timestamps and message text.
+
+You set a retention period per log group — from one day to ten years, or never expire. Without a retention period, logs accumulate indefinitely and incur ongoing storage costs.
+
+Many AWS services automatically send logs to CloudWatch. Lambda sends all function output to a log group named after the function. ECS sends container standard output and error. VPC Flow Logs can be directed to CloudWatch. API Gateway access logs can be sent to a log group you specify.
+
+Metric Filters let you extract numeric data from log text. You define a pattern — for example, any line containing the word ERROR — and CloudWatch increments a custom metric each time it matches. You can then create an alarm on that metric to alert when error rates spike.
+
+CloudWatch Logs Insights is an interactive query language for analysing log data across one or more log groups. You write queries that filter, aggregate, and visualise log events. A typical query might filter for error messages, count them in five-minute buckets, and sort by time. Insights queries are powerful for root cause analysis during incidents.
+
+Logs can be exported to S3 in batch for long-term archiving. For real-time streaming, use a subscription filter — this routes log data as it arrives to Kinesis Data Streams, Kinesis Firehose, or a Lambda function. This enables real-time log processing pipelines.
+
+Now let's cover AWS CloudTrail.
+
+CloudTrail records every API call made in your AWS account — through the console, the CLI, SDKs, or other services acting on your behalf. Every recorded event contains the identity of who made the call, the specific API action, the timestamp, the source IP address, the region, and whether the call succeeded or returned an error.
+
+There are three event types. Management events record control plane operations — creating an EC2 instance, deleting an S3 bucket, modifying an IAM policy. These are enabled by default and the first copy is free. Data events record object-level operations — S3 GetObject and PutObject, Lambda function invocations, DynamoDB item-level operations. Data events are not enabled by default and are charged. Insights events detect anomalous API activity using machine learning baselines — an unusual spike in TerminateInstances calls, or an abnormal number of CreateAccessKey calls might indicate a compromised credential.
+
+Event History gives you access to the last ninety days of management events directly in the console without any configuration. For longer retention, data events, or delivery to S3 for analysis, you create a Trail. A multi-region trail captures events from all AWS regions into a single S3 bucket — this is the recommended default, as attacks and misconfigurations can happen in any region. An Organisation trail extends this across all accounts in an AWS Organisation.
+
+To protect the integrity of your audit log, enable log file validation. CloudTrail generates a SHA-256 digest file every hour. You can use this to mathematically verify that no log files have been tampered with or deleted since they were delivered. Protect the S3 bucket holding trail logs with a restrictive bucket policy and consider enabling S3 Object Lock to prevent deletion.
+
+Now let's cover AWS Config.
+
+Config answers a different question from CloudTrail. CloudTrail tells you who made an API call. Config tells you what a resource's configuration looked like at any point in time, and whether it was compliant with your policies.
+
+Config continuously records the configuration of supported AWS resources — EC2 instances, S3 buckets, security groups, RDS instances, IAM roles, VPC configuration, and hundreds more. Every time a configuration changes, Config records a new snapshot and stores it in S3. You can look back at the configuration history of any resource and see exactly what it looked like at any point in the past.
+
+Config Rules evaluate whether your resources are compliant with defined policies. AWS provides over two hundred managed rules covering common security and operational requirements — for example, a rule that flags any EBS volume that is not encrypted, or a rule that flags any S3 bucket with public read access enabled. You can also write custom rules as Lambda functions for any business-specific requirement. When a resource violates a rule, Config marks it as non-compliant and can send an SNS notification.
+
+Config Aggregator collects configuration and compliance data from multiple accounts and regions into a single account, giving you an organisation-wide compliance view from one place.
+
+Config Remediation lets you automatically fix non-compliant resources. You associate a rule with an SSM Automation document, and when a violation is detected, the automation runs — for example, enabling encryption on a non-compliant EBS volume, or revoking an overly permissive security group rule. Remediation can be fully automatic or require manual approval.
+
+Let's close with the three-way comparison that the exam frequently tests.
+
+CloudWatch answers "how is my system performing?" — it monitors metrics, collects logs, and fires alarms when performance thresholds are breached. CloudTrail answers "who did what?" — it provides the audit trail of every API action taken in your account. Config answers "what does my infrastructure look like, and is it compliant?" — it tracks configuration history and evaluates resources against compliance rules.
+
+A practical example: if an S3 bucket is unexpectedly deleted, CloudTrail tells you which IAM user or role made the DeleteBucket API call. Config tells you what the bucket's configuration looked like before it was deleted. CloudWatch would alert you if the deletion caused application errors.
+
+In the next topic, we cover AWS Organizations and Service Control Policies — the governance layer for managing multiple AWS accounts at scale.

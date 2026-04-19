@@ -42,7 +42,7 @@ See `../CLAUDE.md` for shared notebook conventions, repo structure, audio genera
 | 25 | KMS & Secrets Manager | `25-kms-and-secrets-manager.ipynb` | `25-kms-and-secrets-manager.wav` |
 | 26 | Shield, WAF & Cognito | `26-shield-waf-and-cognito.ipynb` | `26-shield-waf-and-cognito.wav` |
 | 27 | Shared Responsibility & Compliance | `27-shared-responsibility-and-compliance.ipynb` | `27-shared-responsibility-and-compliance.wav` |
-| 28 | CloudWatch, CloudTrail & Config | _(planned)_ | `28-cloudwatch-cloudtrail-and-config.wav` |
+| 28 | CloudWatch, CloudTrail & Config | `28-cloudwatch-cloudtrail-and-config.ipynb` | `28-cloudwatch-cloudtrail-and-config.wav` |
 | 29 | Organizations & Service Control Policies | _(planned)_ | `29-organizations-and-service-control-policies.wav` |
 | 30 | Cost Management & Billing | _(planned)_ | `30-cost-management-and-billing.wav` |
 | 31 | High Availability & Disaster Recovery | _(planned)_ | `31-high-availability-and-disaster-recovery.wav` |
