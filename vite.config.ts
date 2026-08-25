@@ -7,12 +7,12 @@ import react from '@vitejs/plugin-react'
 // gotcha that bites when two React copies meet (invalid-hook-call). jsx is automatic by default
 // with @vitejs/plugin-react.
 //
-// `base` is `/aws-content/` for the production BUILD only (the app deploys under
-// graphl.in/aws-content/ as a concept app in the GraphL catalog — so built asset URLs must be
+// `base` is `/aws/` for the production BUILD only (the app deploys under graphl.in/aws/ as a concept
+// app in the GraphL catalog — matching the repo name schemabotview/aws — so built asset URLs must be
 // subpath-relative). Dev/serve stays at `/` so `npm run dev` and the capture/record scripts (which
 // drive the dev server at localhost:5173/#/<id>) are unaffected.
 export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/aws-content/' : '/',
+  base: command === 'build' ? '/aws/' : '/',
   plugins: [react()],
   resolve: {
     dedupe: ['react', 'react-dom', '@xyflow/react'],

@@ -1,7 +1,7 @@
 # Build the Vite app and deploy it to GitHub Pages on every push to main. The site is served at
-# graphl.in/aws-content/ (the apex custom domain is inherited from the org's schemabotview.github.io
-# Pages site — no CNAME file is needed here; the vite `base` is set to /aws-content/ for the build).
-# Nothing built is committed to the repo: push source → this workflow publishes dist/.
+# graphl.in/aws/ (the apex custom domain is inherited from the org's schemabotview.github.io Pages
+# site — no CNAME file is needed here; the vite `base` is set to /aws/ for the build). Nothing built
+# is committed to the repo: push source → this workflow publishes dist/.
 name: Deploy to Pages
 
 on:
