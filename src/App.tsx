@@ -129,7 +129,7 @@ export function App() {
   const audioUrl = match
     ? `${import.meta.env.BASE_URL}audio/${activeCourse.id}/${match.section.id}.wav`
     : undefined
-  const { toggle, stop } = useNarration(audioUrl, () => {
+  const { playing, toggle, stop } = useNarration(audioUrl, () => {
     const cur = location.hash.replace(/^#\/?/, '')
     const idx = globalSections.findIndex(({ slug }) => slug === cur)
     const next = globalSections[idx + 1] // rolls across course boundaries into the next chapter
@@ -171,6 +171,10 @@ export function App() {
         index={index}
         total={sections.length}
         onHome={goHome}
+        onPrev={() => go(-1)}
+        onNext={() => go(1)}
+        narrating={playing}
+        onToggleNarration={toggle}
       />
     )
   } else {

@@ -54,7 +54,7 @@ body {
   top: 0;
   right: 0;
   height: 100%;
-  width: min(92%, 560px);
+  width: 100%; /* portrait: full-screen reading surface (landscape overrides to a 42% column) */
   display: flex;
   align-items: safe center;
   justify-content: center;
@@ -71,19 +71,81 @@ body {
 }
 .slide-toggle {
   position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
+  top: 14px;
+  right: 14px;
   z-index: 11;
-  width: 40px;
-  height: 56px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(26, 29, 35, 0.9);
-  color: var(--fg);
-  font-size: 22px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 19px;
   line-height: 1;
   cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) {
+  .slide-toggle:hover {
+    color: var(--idx-accent);
+    border-color: var(--idx-accent);
+  }
+}
+.slide-toggle:focus:not(:focus-visible) {
+  outline: none;
+}
+.slide-toggle:focus-visible {
+  outline: 2px solid var(--idx-accent);
+  outline-offset: 2px;
+}
+
+/* Footer control bar (interactive only). Raised above the portrait drawer so Home + narration + nav
+   stay usable while the slide is open. Compound selector (.reel-foot.reel-foot--controls, 0,2,0) so it
+   outranks the base .reel-foot rule (z-index 8 / align baseline), which is defined LATER in the file —
+   at equal specificity that base would win here. */
+.reel-foot.reel-foot--controls {
+  z-index: 12;
+  align-items: center;
+}
+.reel-foot__grp,
+.reel-foot__nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reel-foot__ctrl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(26, 29, 35, 0.9);
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  pointer-events: auto; /* the footer container is pointer-events:none; re-enable the buttons */
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent; /* no grey/blue tap flash on mobile */
+}
+@media (hover: hover) {
+  .reel-foot__ctrl:hover {
+    color: var(--idx-accent);
+    border-color: var(--idx-accent);
+  }
+}
+.reel-foot__ctrl:focus:not(:focus-visible) {
+  outline: none;
+}
+.reel-foot__ctrl:focus-visible {
+  outline: 2px solid var(--idx-accent);
+  outline-offset: 2px;
+}
+.reel-foot__count--live {
+  pointer-events: none;
+  min-width: 3.5em;
+  text-align: center;
 }
 
 /* GraphL wordmark — top-left of the bare SCENE view; click or Esc → back to catalog. (The section
@@ -232,6 +294,13 @@ body {
   .slide-toggle {
     display: none;
   }
+  /* Restore the capture-tuned slide metrics (the base carries the larger portrait values). Scoped
+     with .stage--section so it outranks the base .slide-panel__scaler rule, which is defined LATER
+     in the file — at equal specificity that base would win here too. */
+  .stage--section .slide-panel__scaler {
+    padding: 0 60px;
+    --fs-body: 26px;
+  }
 }
 
 /* --- Slide scaler + markdown ----------------------------------------------- */
@@ -241,9 +310,9 @@ body {
    capture legibility is a ONE-NUMBER change (adapted from the studio reveal-engine). */
 .slide-panel__scaler {
   box-sizing: border-box;
-  padding: 0 60px;
+  padding: 0 40px; /* portrait: trimmed side padding to fill the phone width (landscape restores 60) */
   color: #c8cdd6;
-  --fs-body: 26px;
+  --fs-body: 31px; /* portrait/reels: larger so the slide fills the phone (landscape restores 26) */
   --fs-title: calc(var(--fs-body) * 1.73);
   --fs-heading: calc(var(--fs-body) * 1.2);
   --fs-code: calc(var(--fs-body) * 0.78);
