@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 connecting — everything so far lived inside one VPC; real systems reach beyond it. The organizing
 // question is always WHAT are you connecting to, and each has AWS options. Another VPC: VPC Peering

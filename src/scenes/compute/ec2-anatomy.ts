@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 ec2-anatomy — EC2 (Elastic Compute Cloud) is the workhorse: it rents you a virtual server, an
 // INSTANCE, by the second. Dissect it into the five parts that come up constantly: an AMI (the boot

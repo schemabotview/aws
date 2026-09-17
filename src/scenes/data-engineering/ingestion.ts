@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 ingestion-streaming — getting data IN, which happens two ways. BATCH: move data in scheduled bulk
 // loads — files and database exports landed periodically. STREAMING: capture data record-by-record as

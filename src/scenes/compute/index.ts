@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { whatIsCompute } from './what-is-compute'
 import { computeSpectrum } from './spectrum'
 import { ec2Anatomy } from './ec2-anatomy'

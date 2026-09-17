@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { rentedCloud } from './rented-cloud'
 import { serviceLadder } from './service-ladder'
 import { deploymentModels } from './deployment-models'

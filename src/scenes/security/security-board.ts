@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 defense-in-depth (finale) — the whole course as one board: the four layers of protection, each
 // filled with the services that implement it, so you can pick the right tool by asking "which layer am

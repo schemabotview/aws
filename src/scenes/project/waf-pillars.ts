@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // waf-pillars — §12 (Phase 2 · Design finale, and the finale of the whole 11-course arc). Review the
 // NovaBank design against the five Well-Architected pillars. Each pillar is a card whose sub is the

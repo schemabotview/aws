@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 principals — the "who". Every request is made by a principal, and there are three kinds, all
 // living inside one AWS account (the trust boundary). Root: the all-powerful account owner, drawn in

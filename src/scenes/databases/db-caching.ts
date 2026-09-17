@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 caching — the move that makes any database faster: put an IN-MEMORY cache in front of it. The app
 // reads the cache first; a HIT is served from RAM in microseconds and never touches the DB, a MISS

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // payments — §9 (Phase 2 · Design). The integration design: how money moves reliably BETWEEN the two
 // worlds. The detail the overview can't show: the transfer SAGA drawn as a Step Functions workflow

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 spectrum — the mental model that makes AWS compute click. Every choice sits on ONE axis: how
 // much you manage vs how much AWS does. Framed as a LADDER (rhymes with the deck's "climb the

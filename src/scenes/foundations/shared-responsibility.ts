@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §8 shared-responsibility — security is a PARTNERSHIP with a precise dividing line. Two halves: You
 // secure IN the cloud (what you put on top), AWS secures OF the cloud (the physical layer it owns).

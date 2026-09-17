@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 security-groups-nacls — routing decides where traffic may GO; firewalls decide what may PASS. A
 // VPC gives you two, at two levels, and the difference is a classic exam question. NACL = subnet-level

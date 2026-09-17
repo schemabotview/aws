@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 managed-databases — the frame for Course 6. Your app can run, store files and serve requests;
 // now it needs to store and query STRUCTURED data reliably. You could install MySQL/Postgres yourself

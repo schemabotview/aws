@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §8 well-run (finale) — the whole operate loop as one board: the four activities, each filled with the
 // services that implement it, so you pick the right operate-tool by asking "which part of the loop am I

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 what-is-cloud — the AWS Cloud container holds a 2×2 grid of service categories; each category
 // holds a 2×2 grid of real service TILES (icon over label, official AWS icons). Shares the You + AWS

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 step-functions — orchestration. Messaging (§5) is fire-and-forget hand-offs between components;
 // but some processes are an ordered SEQUENCE of steps with branching, retries and error handling, and

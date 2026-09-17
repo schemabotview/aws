@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 cost — the OPTIMIZE stage. Pay-as-you-go (foundations §9) is a gift, but unwatched it creeps, so
 // cost management has two halves. PAY LESS — three levers: right-size (match instance size to real need

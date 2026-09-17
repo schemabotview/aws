@@ -27,7 +27,6 @@ A **project** capstone weaves the courses together end to end.
 
 ```
 src/
-  render-engine/   layout + react-flow / code-snippet renderer (folder, not a package)
   scenes/          hand-authored scenes + registry
   content/         courses → sections (one file per section) + registry
   section/         composited scene-left / slide-right view (responsive)
@@ -43,7 +42,7 @@ scripts/
 ```bash
 npm install
 npm run dev                       # open the printed URL, try #/foundations-what-is-cloud
-npm run build                     # tsc + vite build (must stay clean)
+npm run build                     # vite build only — NO typecheck; run `npx tsc --noEmit` separately
 npm run record foundations        # 4K video → scripts/out/foundations.mp4
 npm run record:reels foundations  # portrait reels
 ```

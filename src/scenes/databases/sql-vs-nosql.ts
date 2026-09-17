@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 sql-vs-nosql — the model split, the frame for the whole course. A managed database (§1) still
 // leaves the biggest question: which SHAPE of database? Two families, matched to how your data is

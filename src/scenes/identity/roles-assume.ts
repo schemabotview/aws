@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 roles-assume — the elegant core of modern AWS access. A role is a set of permissions that
 // belongs to no one and that any TRUSTED party can borrow for a short time. It is defined by TWO

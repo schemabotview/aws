@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 choosing-storage — the finale. Pull back to §1's three shapes, now as a decision board: match
 // the shape to the ACCESS PATTERN. Block (EBS) when one server needs a fast local disk it controls;

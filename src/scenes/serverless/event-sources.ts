@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 event-sources — how events actually reach a Lambda, which comes in exactly THREE models, and the
 // model decides the retry/error semantics. SYNCHRONOUS: the caller invokes and waits for the response

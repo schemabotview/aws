@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 ebs — back to the plainest shape: block storage. EBS (Elastic Block Store) gives an EC2 instance
 // a VOLUME — a virtual disk it formats and mounts like a physical drive (the root volume from compute

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { storageShapes } from './what-is-storage'
 import { s3Basics } from './s3-basics'
 import { s3Classes } from './s3-classes'

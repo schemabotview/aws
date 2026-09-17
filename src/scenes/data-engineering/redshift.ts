@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 redshift — the DATA WAREHOUSE, the analyze stage's heavy-duty end. Where Athena (§5) queries the
 // lake ad-hoc and serverless, Amazon Redshift is a provisioned, purpose-built warehouse for fast,

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { operateLoop } from './operate-loop'
 import { cloudwatch } from './cloudwatch'
 import { auditConfig } from './audit-config'

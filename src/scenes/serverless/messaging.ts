@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 messaging — the glue that lets serverless components talk without depending on each other
 // directly. Three services, three shapes. SQS: a QUEUE — a producer drops messages, one consumer

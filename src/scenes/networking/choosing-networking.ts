@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §8 choosing-networking — the finale. Networking has no single spectrum; it's a handful of decisions
 // you make designing a network, so the recap is a 2×2 board of the key choices (the exam-judgment

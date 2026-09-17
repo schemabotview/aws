@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 request-path — the capstone: everything assembles into the journey of one user request. A user
 // on the internet → in through the Internet Gateway → the Application Load Balancer in a PUBLIC subnet

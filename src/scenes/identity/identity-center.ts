@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 identity-center — IAM users don't scale to a whole workforce × many accounts. IAM Identity
 // Center (formerly AWS SSO) is the clean front door: a person logs in ONCE, sees every account they

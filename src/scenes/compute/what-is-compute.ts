@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 what-is-compute — the frame for Course 3. Compute is simply WHERE YOUR CODE RUNS: the CPU and
 // memory that execute your application. The one idea to carry through the whole course: there is no

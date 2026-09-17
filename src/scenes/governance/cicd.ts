@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 cicd — the second AUTOMATE stage: automating how software SHIPS. Manually building and copying
 // code to servers is slow and risky; a CI/CD pipeline automates the whole path from a git commit to

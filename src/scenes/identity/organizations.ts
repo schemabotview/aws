@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §9 organizations — zoom all the way out to the accounts themselves. AWS Organizations manages a
 // whole fleet of accounts as one structured TREE instead of a pile of disconnected logins: a

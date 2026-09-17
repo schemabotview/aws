@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // analytics — §8 (Phase 2 · Design). The OLAP design realizing §3's requirements. The detail the
 // overview can't show: ONE transaction stream splits into TWO lanes with opposite tempos — a SHORT

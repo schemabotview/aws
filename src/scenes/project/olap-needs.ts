@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // olap-needs — §3 (Phase 1 · Requirements). The analytics world stated as REQUIREMENTS, mirroring §2's
 // oltp-needs. Same transaction data, a completely different set of needs. Two bands: THE WORKLOAD (the

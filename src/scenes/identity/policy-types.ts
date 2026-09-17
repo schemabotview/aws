@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 policy-types — a policy can attach in TWO places, answering the permission question from two
 // directions. Identity policy: on a PRINCIPAL (user/group/role) — what THEY can do. Resource policy:

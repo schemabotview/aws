@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 threat-detection — the OUTERMOST layer of the onion: assume something eventually gets through, so
 // watch continuously and catch it. These are detective controls, and each watches a different thing.

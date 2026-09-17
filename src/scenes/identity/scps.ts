@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §10 scps — the course capstone. A Service Control Policy is a ceiling on an ENTIRE account: attached
 // to an OU/account, it caps the maximum permissions anyone inside can have (not even root rises above

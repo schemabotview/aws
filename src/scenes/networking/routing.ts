@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 routing — what actually makes a subnet public or private is its ROUTE TABLE (rules: destination
 // → target). Every table has a built-in local route (VPC range stays local, so subnets can talk). To

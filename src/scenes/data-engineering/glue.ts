@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 glue-etl — the TRANSFORM stage. Raw data in the lake is messy and its structure is unknown, so it
 // isn't query-ready. AWS Glue is the serverless engine that fixes both problems, and it does two jobs.

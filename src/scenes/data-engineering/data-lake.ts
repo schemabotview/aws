@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 data-lake — the STORE stage, and the foundation of the whole analytics world. A data lake is a
 // single place to land ANY data in ANY format — structured tables, semi-structured JSON/logs, raw

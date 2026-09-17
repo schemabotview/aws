@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 availability-zones — the full containment stack in one frame: You → AWS Cloud ⊃ Region ⊃ AZs ⊃
 // data centers. Completes the §4→§5 rhyme by zooming all the way in: §4 was AWS ⊃ Regions, here the

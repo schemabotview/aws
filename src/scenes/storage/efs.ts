@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 efs — the last shape: file storage. Where EBS (§5) gives ONE server a private disk in ONE AZ,
 // EFS (Elastic File System) gives MANY servers a shared file tree ACROSS AZs. It's a managed NFS

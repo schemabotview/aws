@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 perimeter — the outward-facing layers that defend the edge before traffic reaches your app.
 // Incoming traffic is a mix of real users and attackers, and it runs a gauntlet: AWS Shield absorbs

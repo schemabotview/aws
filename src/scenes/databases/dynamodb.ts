@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 dynamodb — AWS's flagship NoSQL, and the mental model is the opposite of the relational engines.
 // It is SERVERLESS: no instances, no AZs, no storage to provision — you create a table and it scales

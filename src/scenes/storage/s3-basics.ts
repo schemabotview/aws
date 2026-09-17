@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 s3-basics — S3 (Simple Storage Service), the star of the course. Object storage built on two
 // nouns: BUCKETS and OBJECTS. A bucket is a container with a globally-unique name, living in one

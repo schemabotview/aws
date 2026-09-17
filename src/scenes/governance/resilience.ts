@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 resilience — the last stage of the loop, RECOVER. HA (foundations §6 / networking) keeps you up
 // through an AZ failure within a Region; DISASTER RECOVERY is about surviving the loss of a whole

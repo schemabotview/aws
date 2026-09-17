@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 rds — deep on the managed relational engine. One RDS PRIMARY handles your reads and writes; two
 // independent moves fan off it. Multi-AZ HA: a synchronous STANDBY in another AZ that RDS promotes

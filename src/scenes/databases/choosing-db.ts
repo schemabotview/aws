@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 choosing-a-database — the finale, a DECISION BOARD that recaps the whole course (mirrors compute
 // §8 / storage §7 / networking §8). Three linked calls, drawn as four bands in a scene-level 2×2:

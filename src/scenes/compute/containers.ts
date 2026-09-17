@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 containers — climb to the middle of the spectrum. A container packages your app + ALL its
 // dependencies into one portable image that runs the same everywhere (no "works on my machine"). The

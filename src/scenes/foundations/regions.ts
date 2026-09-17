@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 regions — the global footprint. Rhymes with §1 (You → AWS Cloud container), but the box now
 // holds a grid of REGION tiles instead of service categories: AWS Cloud is a world of Regions and

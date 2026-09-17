@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 secrets — the rule is simple and absolute: never hard-code credentials (database passwords, API
 // keys, tokens) in your code or config, because they leak — into git, logs, images. Instead the app

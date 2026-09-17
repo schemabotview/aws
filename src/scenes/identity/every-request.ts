@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 every-request — the frame for the whole IAM course. Nothing happens on AWS until a request
 // clears the IAM gate. A principal makes a signed API request; IAM is the box every request passes

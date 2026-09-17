@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 high-availability — the RECIPE using §5's AZs: run copies of your service in ≥ 2 AZs behind a
 // load balancer, so one AZ failing doesn't take you down. The load balancer is a REGIONAL AWS service

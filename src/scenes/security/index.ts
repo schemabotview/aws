@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { defenseInDepth } from './defense-in-depth'
 import { encryption } from './encryption'
 import { secrets } from './secrets'

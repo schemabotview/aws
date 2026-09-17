@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 edge — the opposite direction from §6: letting the whole public internet reach you FAST, from
 // anywhere, via AWS's hundreds of edge locations. Two services. Route 53 = DNS (the phonebook):

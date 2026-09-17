@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 infrastructure-as-code — the first AUTOMATE stage. Clicking resources together in the console is
 // manual, error-prone, and impossible to reproduce; IaC replaces it by declaring your infrastructure

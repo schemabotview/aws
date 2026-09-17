@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 api-gateway — the HTTP front door. A Lambda needs something in front of it to speak HTTP to the
 // outside world, and the canonical pairing is Amazon API Gateway: it takes the incoming request,

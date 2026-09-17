@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 audit-config — still OBSERVE, but the accountability half: metrics tell you something is wrong;
 // these two tell you WHO did it and WHAT changed. CloudTrail is the account's flight recorder — it logs

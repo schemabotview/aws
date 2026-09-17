@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 what-is-serverless — the frame for Course 7. Compute (Course 3) put your code on servers you size
 // and scale; serverless removes the server from view entirely. You write a function; AWS provides the

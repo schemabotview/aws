@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // quality-needs — §4 (Phase 1 · Requirements, the finale). The NON-FUNCTIONAL bar, in depth. The brief
 // (§1) named four qualities as single tiles; here each opens into the concrete requirements it forces.

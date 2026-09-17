@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 s3-security — S3 is PRIVATE BY DEFAULT, yet famous for leaks when people misconfigure it. Four
 // layers keep a bucket safe: Block Public Access (a master switch, on by default, that overrides any

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §8 permission-sets — the two pieces that make Identity Center work, mapping onto IAM's two eternal
 // questions. Federation answers WHO: trust an existing identity provider (Okta/Entra/Google) instead

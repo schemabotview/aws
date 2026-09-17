@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 cognito — the one layer that faces your CUSTOMERS rather than your infrastructure. IAM (Course 2)
 // is for your workforce and AWS resources; Cognito is for the end users who sign in to YOUR application,

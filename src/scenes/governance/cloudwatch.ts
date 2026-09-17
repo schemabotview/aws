@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 cloudwatch — the first stage of the loop, OBSERVE. You can't operate what you can't see, and
 // CloudWatch is the eyes: every AWS resource emits METRICS (numeric time-series — CPU, latency,

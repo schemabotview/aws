@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // secure-bank — §10 (Phase 2 · Design). Security design as DEFENSE IN DEPTH, realizing §4's secure +
 // compliant bar. Not a request flow — layered controls, drawn as stacked bands from the outside in:

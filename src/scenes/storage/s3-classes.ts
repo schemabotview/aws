@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 s3-classes — not all data is accessed equally, so S3 lets you pay far less for colder data,
 // trading retrieval speed/cost for cheaper storage. A temperature ladder: Standard (hot, frequent,

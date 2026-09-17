@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { managedDb } from './managed-db'
 import { sqlVsNosql } from './sql-vs-nosql'
 import { rds } from './rds'

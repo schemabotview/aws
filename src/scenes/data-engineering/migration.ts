@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 migration — before any of this pipeline runs, you often have to get EXISTING data into AWS, from
 // on-premises systems or another cloud. Four purpose-built tools, matched to what you're moving. DMS

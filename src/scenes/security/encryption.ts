@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 encryption — the innermost layer: protect the data itself, in its two states. AT REST (data on
 // disk): AWS uses ENVELOPE ENCRYPTION via KMS — a root KMS key (which never leaves KMS) encrypts a

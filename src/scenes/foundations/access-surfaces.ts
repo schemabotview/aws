@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 connecting — four ways to touch AWS (Console/CLI/SDK/IaC: a ladder from clicking to code) all
 // call the SAME underlying API, authorized by IAM, and thereby reach every AWS service. The four

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // operate-bank — §11 (Phase 2 · Design). Operations design as the Day-2 OPERATE LOOP (observe →
 // automate → optimize → recover), realizing §4's always-on (RTO/RPO) + scalable/cost bar. Drawn as a

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 auto-scaling — the "elastic" in EC2, made real, and the payoff of §5's frame. An Auto Scaling
 // Group (ASG) automatically ADDS and REMOVES instances to match demand: you set min / desired / max

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { whatIsServerless } from './what-is-serverless'
 import { lambda } from './lambda'
 import { eventSources } from './event-sources'

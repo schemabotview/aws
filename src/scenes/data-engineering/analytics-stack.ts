@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §8 analytics-stack — the finale: the whole course composed into one end-to-end pipeline. Data from
 // the sources is ingested (batch or streaming via Kinesis/Firehose), landed in the S3 data lake,

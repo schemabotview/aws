@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 service-models — the PROGRESSIVE build of §1: same You + AWS Cloud box, but the services are
 // now grouped into three bands (SaaS → PaaS → IaaS, most-managed on top), each holding example

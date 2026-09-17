@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { brief } from './brief'
 import { oltpNeeds } from './oltp-needs'
 import { olapNeeds } from './olap-needs'

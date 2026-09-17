@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "AWS content repo for GraphL — authors scenes (react-flow diagrams) per slug, renders them full-frame, and captures screenshots + coords for the compose pipeline. Includes the render-engine (layout + patterns) as src/render-engine.",
+  "description": "AWS content repo for GraphL \u2014 authors scenes (react-flow diagrams) per slug, renders them full-frame, and captures screenshots + coords for the compose pipeline. The render engine is the @graphlearning/flow package, which ships the AWS service icon set.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -19,10 +19,8 @@
     "thumb": "node scripts/thumb.mjs"
   },
   "dependencies": {
-    "@fontsource/ibm-plex-mono": "^5.3.0",
-    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@graphlearning/flow": "^0.3.0",
     "@xyflow/react": "^12.11.2",
-    "aws-react-icons": "^3.3.0",
     "lucide-react": "^1.28.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

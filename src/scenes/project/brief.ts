@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 the-brief — the frame for the capstone. We're going to design and build one real system end to end,
 // composing everything from Courses 1–10: NovaBank, a fictional retail bank on AWS. The brief has two

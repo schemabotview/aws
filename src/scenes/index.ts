@@ -1,4 +1,4 @@
-import type { Scene } from '../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { foundationsScenes } from './foundations'
 import { identityScenes } from './identity'
 import { computeScenes } from './compute'

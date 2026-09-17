@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 operations — the frame for Course 10. Courses 1–9 were about BUILDING a system; this course is
 // about RUNNING it — the "Day 2" work that never ends. Operations is a continuous loop of four

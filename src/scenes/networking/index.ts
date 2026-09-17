@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { vpcIntro } from './vpc-intro'
 import { subnets } from './subnets'
 import { routing } from './routing'

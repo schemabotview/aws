@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // core-app — §7 (Phase 2 · Design). The transactional core DESIGN — the deep-dive that realizes the §2
 // OLTP requirements on real AWS services, showing what the overview poster can't: the actual request

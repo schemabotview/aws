@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 load-balancing — a single server is a single point of failure AND a capacity ceiling. The fix
 // starts with Elastic Load Balancing: users hit ONE public address (the ELB); it spreads each request

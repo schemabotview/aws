@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { twoDataWorlds } from './two-data-worlds'
 import { dataLake } from './data-lake'
 import { ingestion } from './ingestion'

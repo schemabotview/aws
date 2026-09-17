@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 lambda — inside the function. A Lambda is defined by four things: the HANDLER (the entry point AWS
 // calls per invocation), the RUNTIME (the language environment — Python, Node, Java, Go…), the

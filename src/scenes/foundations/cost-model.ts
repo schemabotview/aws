@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §9 pay-as-you-go — the last frame over the whole map. A vertical narrative matching the slide:
 // what you pay for (metered per unit) → The bill → how you keep it in check. The bill node carries

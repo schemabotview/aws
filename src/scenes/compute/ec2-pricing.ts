@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 ec2-pricing — the same instance can cost wildly different amounts depending on HOW you buy it,
 // and that is one of the highest-leverage cost skills on AWS. Four ways to pay: On-Demand (per

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 what-is-storage — the frame for Course 4. With compute running your code, it needs somewhere to
 // keep data. AWS storage comes in THREE fundamental shapes, and choosing well means matching the

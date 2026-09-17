@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 import { everyRequest } from './every-request'
 import { principals } from './principals'
 import { policies } from './policies'

@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 analytics-vs-oltp — the frame for Course 8, drawn as two worlds that contrast by their SHAPE. Each
 // world is a container carrying its own top→bottom flow, so you read the difference directly. The OLTP

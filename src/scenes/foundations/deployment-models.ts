@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 deployment-models — the four models are PEERS (no top-level edges → the engine stacks them as a
 // labelled list). Each model is now a BAND (container) that shows the same story: an actor (You) and

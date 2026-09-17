@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // nova-architecture — the FULL NovaBank reference architecture (scene-only; no paired slide). Every
 // service the capstone uses, dropped into its layer AND wired with flow edges (the sketch: Customers →

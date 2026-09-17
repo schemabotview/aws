@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §7 event-driven-app — the finale: everything from the course composed into one event-driven
 // application, with no server anywhere in it. The synchronous path is §4's canonical API: Client → API

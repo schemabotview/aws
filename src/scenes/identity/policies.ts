@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §3 policies — how the verdict is decided. A request is checked against every policy that applies,
 // and IAM runs a precise, ORDERED logic that's worth memorising: (1) an explicit Deny anywhere wins,

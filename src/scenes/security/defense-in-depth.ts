@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 security-model — the frame for Course 9, drawn as the layer BOARD variant: the layers of defense
 // in depth as a top-to-bottom stack, outermost first. Security on AWS is not a single wall; it's

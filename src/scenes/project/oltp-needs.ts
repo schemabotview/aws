@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // oltp-needs — §2 (Phase 1 · Requirements). The transactional core stated as REQUIREMENTS, not AWS
 // services (no service tiles here — that's Phase 2). Two bands: THE WORKLOAD (the small, frequent,

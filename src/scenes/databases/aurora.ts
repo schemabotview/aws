@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §4 aurora — AWS's cloud-native relational engine, and the one idea is that it DECOUPLES compute from
 // storage. Where RDS (§3) gave each replica its own disk, an Aurora cluster runs a single WRITER plus

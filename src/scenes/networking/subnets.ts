@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §2 subnets — an empty VPC is one big address space; you divide it into SUBNETS. A subnet is a slice
 // of the VPC's CIDR, and the defining rule is that each subnet lives in exactly ONE Availability Zone

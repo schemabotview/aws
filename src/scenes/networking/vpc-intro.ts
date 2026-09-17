@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §1 what-is-networking — the frame for Course 5. With ground, identity, compute and storage in
 // place, we need the wiring that connects everything. It starts with the VPC (Virtual Private Cloud):

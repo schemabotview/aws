@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §6 boundaries — the last permissions concept: a permission boundary caps the MAXIMUM permissions a
 // principal can ever have, no matter what its identity policies grant. The mental model is an

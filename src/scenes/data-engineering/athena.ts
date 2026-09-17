@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §5 athena — the first way to ANALYZE: query the lake in place. Amazon Athena runs standard SQL
 // directly on the data sitting in S3 — nothing is loaded into a database first. It's fully serverless:

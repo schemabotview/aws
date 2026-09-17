@@ -1,4 +1,4 @@
-import type { Scene } from '../../render-engine'
+import type { Scene } from '@graphlearning/flow'
 
 // §8 choosing — the finale. Pull back to the whole map: choosing compute = picking your point on the
 // spectrum for THIS workload. Recaps §2's ladder (EC2 at the base → climb for convenience) but now
